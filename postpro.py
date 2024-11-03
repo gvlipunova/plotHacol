@@ -288,13 +288,15 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
         fout = open(dirname + '/avprofile.dat', 'w')
         if savetheta:
             fth = open(dirname + '/thprofile.dat','w')
-            fth.write('# theta -- u/umag \n')
+            fth.write('# theta -- f -- u/umag -- df -- du/umag \n')
         fout.write("# R  -- v -- u -- Prat -- T -- rho -- qloss -- dv -- du -- dbeta -- dqloss \n")
         nx = size(xp)
         for k in arange(nx):
             s = str(xp[k]) + " " + str(vp[k]) + " " + str((up/umagtar)[k]) + " " + str(betap[k]) + " " + str(tempp[k]) + " " + str(rhop[k]) + " " + str(qloss[k]) + " " + str(dv[k])+ " "+str((du/umagtar)[k])+" "+str(dbeta[k])+" "+str(dqloss[k])+"\n"
             if savetheta:
-                fth.write(str(theta[k])+' '+ str((up/umagtar)[k]) + '\n')
+                f = (up/rhop)[k] * r.max() # normalized enthalpy
+                df = (du/up + drho/rhop)[k] * f
+                fth.write(str(theta[k])+' '+ str(f) +' '+str((up/umagtar)[k]) + ' '+ str(df) +' '+str((du/umagtar)[k]) +'\n')
             print(s)
             fout.write(s)
             fout.flush()

@@ -469,7 +469,7 @@ def postplot(hname, nentry, ifdat = False, conf = 'DEFAULT'):
     g = geo.geometry_initialize(r, r.max(), r.max(), writeout=None, afac = 1.)
     g.r = r ; g.theta = theta ; g.alpha = alpha ; g.across = across ; g.l = l ; g.delta = delta # temporary: need a proper way to restore geometry from the output
     
-    someplots(r, [-v*rho*across/4./pi, v*0.+mdot/4./pi], name=hname+entry+"_mdot", ytitle="$\dot{m}$", ylog=True, formatsequence = ['.k', 'r-'])
+    someplots(r, [-v*rho*across/4./pi, v*0.+mdot/4./pi], name=hname+entry+"_mdot", ytitle=r"$\dot{m}$", ylog=True, formatsequence = ['.k', 'r-'])
     someplots(r, [-u*v*(r/r.min())**4], name=hname+entry+"_g", ytitle=r"$uv \left( R/R_{\rm *}\right)^4$", ylog=True)
     if ifdat:
         q = qloss_separate(rho, v, u*umagtar, g, config[conf])
@@ -603,7 +603,7 @@ def Vcurvestack(n1, n2, step, prefix = "out/tireout", postfix = ".dat", plot2d=F
         ff=open(fname)
         stime = ff.readline()
         ff.close()
-        tar[kctr] = double(''.join(re.findall("\d+[.]\d+e-\d+|\d+[.]\d+", stime)))
+        tar[kctr] = double(''.join(re.findall(r"\d+[.]\d+e-\d+|\d+[.]\d+", stime)))
         if(plot2d):            
             print(stime+": "+str(tar[kctr]))
             v2[kctr,:] = v[:]
@@ -861,15 +861,21 @@ def plot_dts(n, prefix = 'out/tireout', postfix = '.dat', conf = 'DEFAULT'):
 ##############################################
 # subsonic two-panel plot:
 
-def subfint(theta, fint, unorm, thetaT, uTnorm, fT = None):
+def subfint(theta, fint, unorm, thetaT, uTnorm, fT):
 
+    nT = shape(thetaT)[0]
+    fseq = ['or', 'xg', 'db']
+    
     clf()
     fig = figure()
     subplot(211)
     plot(theta, fint, 'k-')
-    # plot(theta, fint[-1]*exp(k*cos(theta)*(1.+cos(theta)**2)), 'r:')
     plot(theta, fint[-1] + 0.75/tan(theta)**2, 'g-.')
-    if fT is not None:
+    if nT>1:
+        print(shape(thetaT), nT)
+        for k in arange(nT):
+            plot(thetaT[k], fT[k], fseq[k])
+    else:
         plot(thetaT, fT, 'b--')
     xlabel(r'$\theta$')
     ylabel(r'$f(\theta)$')
@@ -878,17 +884,18 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT = None):
     plot(theta, unorm, 'k-')
     plot(theta, unorm*0.+3., 'r:')
     plot(theta, unorm*0.+1., 'r:')
-    plot(thetaT, uTnorm, 'b--')
-    # plot(theta, lowk(theta, theta0, rstar/r_e, beta, umag), 'g-.')
-    #    plot(theta, lowk(theta, theta0, rstar/r_e, 0.5, umag), 'g-.')
-    # plot(theta, lowk(theta, theta0, rstar/r_e, 1.0, umag), 'g-.')
-    #    plot(theta, 3. * (1. + beta* (rstar/r_e) * ( 1./tan(theta0)**2-1./tan(theta)**2))**(-4.), 'k-.')
-    #    plot(theta, 3. * (1. + 1.0* (rstar/r_e) * ( 1./tan(theta0)**2-1./tan(theta)**2))**(-4.), 'k-.')
+
+    if nT>1:
+        for k in arange(nT):
+            plot(thetaT[k], uTnorm[k], fseq[k])
+    else:
+        plot(thetaT, uTnorm, 'b--')
+
     xlabel(r'$\theta$')
     ylabel(r'$u(\theta)/u_{\rm mag}(\theta)$')
     ylim(1e-1,20.)
     yscale('log')
     fig.set_size_inches(4.,6.)
-    # fig.tight_layout()
+    fig.tight_layout()
     savefig('uint0.png')
     savefig('uint0.pdf')

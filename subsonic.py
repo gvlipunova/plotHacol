@@ -63,7 +63,7 @@ def luintfun(f, x):
     # int I from 0 to x. lnu = I(x0) - I(x)
     return -3. * cumulative_trapezoid(x / f * (3.*omega**2*(1.-x**2)**2 - 2./(1.-x**2)**2), x=x, initial=0.)
 
-def uint(theta0, f0, K, firstpoint=False, theta_out = pi/2.):
+def uint(theta0, fout, K, firstpoint=False, theta_out = pi/2.):
 
     nth = 10000
     
@@ -71,7 +71,7 @@ def uint(theta0, f0, K, firstpoint=False, theta_out = pi/2.):
     x = cos(theta[::-1])
     # theta = theta[::-1]
 
-    fint = intfun(x, f0, K)
+    fint = intfun(x, fout, K)
     fint = maximum(fint, 0.)
 
     luint = luintfun(fint,x)[::-1]
@@ -83,8 +83,10 @@ def uint(theta0, f0, K, firstpoint=False, theta_out = pi/2.):
     else:
         return theta, fint[::-1], luint
 
-def fzero_solution(conf = 'ASOL_slowT4', snapshot = None):
-    # solve for f(theta0) = 0
+def fzero_solution(conf = 'ASOL_slowT4', snapshot = None, thsnapshots = None):
+    '''
+    thsnapshots are thprofile.dat files produced by acompace. If they are set, plotting snapshot is suppressed
+    '''
 
     # reading the data:
     rstar = config[conf].getfloat('rstar')
@@ -105,7 +107,7 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None):
     
     print("theta0 = ", theta0)
     print("k = ", k)
-    print("expected f0 = ", 0.75 * Dthick**2)
+    print("expected fout = ", 0.75 * Dthick**2)
     
     if snapshot is not None:
         linesT = loadtxt(snapshot) # 'vcomp/tireoutT.dat'
@@ -123,15 +125,24 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None):
 
         theta0 = thetaT.min()
         theta_out = thetaT.max()
-        
-    # we want to find the f0 that produces f(theta0)=0
+
+    if thsnapshots is not None:
+        nsnaps = size(thsnapshots)
+
+        alias = 100
+
+        tharlist = [] ; farlist = [] ; uarlist = [] ; dfarlist = [] ; duarlist = []
+
+        for k in arange(nsnaps):
+            linesT = loadtxt(thsnapshots[k])
+            tharlist.append(linesT[::alias,0]) ; farlist.append(linesT[::alias,1]) ; uarlist.append(linesT[::alias,2]) ;  dfarlist.append(linesT[::alias,3]) ; duarlist.append(linesT[::alias,4])
+            
     # logarithmic bracketing
-    # minimal f0 should be 3/4 of the int, because we do not want f_surface to change sign
-    f0 = fcfun(cos(theta0), k)
-    print("f0min = ", f0)
+    # minimal fout should be 3/4 of the int, because we do not want f_surface to change sign
+
     # ii = input('f0')
     
-    lf1 = log10(f0)-2.0 ; lf2 = log10(f0)+2.0 ; tol = 1e-10
+    lf1 = -2.0 ; lf2 = 2.0 ; tol = 1e-10
 
     theta, fint1, u1 = uint(theta0, 10.**lf1, k, theta_out = theta_out, firstpoint = True)
     theta, fint2, u2 = uint(theta0, 10.**lf2, k, theta_out = theta_out, firstpoint = True)
@@ -143,8 +154,8 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None):
     print(umagrat)
     # ii = input("theta")
 
-    print("f0 = ", 10.**lf1, ": f(0) = ", fint1, "; u[-1] = ", ucrit1)
-    print("f0 = ", 10.**lf2, ": f(0) = ", fint2, "; u[-1] = ", ucrit2)
+    print("fout = ", 10.**lf1, ": f(0) = ", fint1, "; u[-1] = ", ucrit1)
+    print("fout = ", 10.**lf2, ": f(0) = ", fint2, "; u[-1] = ", ucrit2)
 
     # same sign is not expected
     if (ucrit1*ucrit2 >= 0.):
@@ -154,7 +165,7 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None):
         lf = (lf1+lf2)/2.
         theta, fint, u = uint(theta0, 10.**lf, k, theta_out = theta_out, firstpoint = True)
         ucrit = u-umagrat - log(3.)
-        print("f0 = ", 10.**lf, ": f(0) = ", fint)
+        print("fout = ", 10.**lf, ": f(0) = ", fint)
         if ((ucrit*ucrit1) >= 0.):
             lf1 = lf
         else:
@@ -165,7 +176,7 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None):
     
     print("beta = ", 0.75 * fint[0] * sin(theta0)**2)
     beta = 0.75 * fint[0] * sin(theta0)**2
-    print("f0 = ", fint[-1])
+    print("fout = ", fint[-1])
     
     umag = (1.+3.*cos(theta)**2)/(1.+3.*cos(theta0)**2)*(sin(theta0)/sin(theta))**12 
     if snapshot is not None:
@@ -174,7 +185,10 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None):
 
     print("U/Umag_out = ",(u/umag))
 
-    plots.subfint(theta, fint, u/umag, thetaT, uT, fT = fT * umagsnap0/umagsnap[0])
+    if thsnapshots is not None:
+        plots.subfint(theta, fint, u/umag, tharlist, uarlist, farlist)
+    else:
+        plots.subfint(theta, fint, u/umag, thetaT, uT, fT * umagsnap0/umagsnap[0])
     
     # ASCII output:
     fout = open('uint.dat', 'w+')

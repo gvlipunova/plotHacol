@@ -861,7 +861,7 @@ def plot_dts(n, prefix = 'out/tireout', postfix = '.dat', conf = 'DEFAULT'):
 ##############################################
 # subsonic two-panel plot:
 
-def subfint(theta, fint, unorm, thetaT, uTnorm, fT):
+def subfint(theta, fint, unorm, thetaT, uTnorm, fT, duTnorm = None, dfT = None, unorm_lowk = None):
 
     nT = shape(thetaT)[0]
     fseq = ['or', 'xg', 'db']
@@ -874,7 +874,10 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT):
     if nT>1:
         print(shape(thetaT), nT)
         for k in arange(nT):
-            plot(thetaT[k], fT[k], fseq[k])
+            if dfT is not None:
+                errorbar(thetaT[k], fT[k], yerr = dfT[k], fmt = fseq[k], mfc = 'none')
+            else:
+                plot(thetaT[k], fT[k], fseq[k], mfc = 'none')
     else:
         plot(thetaT, fT, 'b--')
     xlabel(r'$\theta$')
@@ -884,10 +887,15 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT):
     plot(theta, unorm, 'k-')
     plot(theta, unorm*0.+3., 'r:')
     plot(theta, unorm*0.+1., 'r:')
+    if unorm_lowk is not None:
+        plot(theta, unorm_lowk, 'g-.')
 
     if nT>1:
         for k in arange(nT):
-            plot(thetaT[k], uTnorm[k], fseq[k])
+            if duTnorm is not None:
+                errorbar(thetaT[k], uTnorm[k], yerr = duTnorm[k], fmt = fseq[k], mfc = 'none')
+            else:
+                plot(thetaT[k], uTnorm[k], fseq[k], mfc = 'none')
     else:
         plot(thetaT, uTnorm, 'b--')
 

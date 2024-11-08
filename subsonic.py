@@ -36,7 +36,7 @@ ifplot =  config['DEFAULT'].getboolean('ifplot')
 
 if ifplot:
     import plots
-
+    
 formatsequence = ['k-', 'g:', 'b--', 'r-.']
 
 # K = 0.5
@@ -44,6 +44,20 @@ formatsequence = ['k-', 'g:', 'b--', 'r-.']
 omega = 0.0
 
 # f0 = 10.0
+
+def dtint(x, b):
+    '''
+    calculates the integral needed for the sound travel time
+    b = Re/Rstar * beta - 1/sin^2\theta0
+    '''
+    print("x = ", x[0], " to ", x[-1]) # shd be from 0 to cos(theta0)
+    print("b = ", b)
+    y = (1.+3.*x**2) * (1.-x**2)/(1. - b * (1.-x**2))
+    print (y, (y<=0.).sum())
+    
+    dt = simpson(sqrt(y), x=x)
+
+    return dt
 
 def lowk(theta, theta0, rrat, beta, umag):
     ufac = 1.+(1./tan(theta)**2-1./tan(theta0)**2)*rrat/beta
@@ -61,7 +75,7 @@ def intfun(x, f0, K):
 
 def luintfun(f, x):
     # int I from 0 to x. lnu = I(x0) - I(x)
-    return -3. * cumulative_trapezoid(x / f * (3.*omega**2*(1.-x**2)**2 - 2./(1.-x**2)**2), x=x, initial=0.)
+    return- 3. * cumulative_trapezoid(x / f * (3.*omega**2*(1.-x**2)**2 - 2./(1.-x**2)**2), x=x, initial=0.)
 
 def uint(theta0, fout, K, firstpoint=False, theta_out = pi/2.):
 
@@ -83,7 +97,7 @@ def uint(theta0, fout, K, firstpoint=False, theta_out = pi/2.):
     else:
         return theta, fint[::-1], luint
 
-def fzero_solution(conf = 'ASOL_slowT4', snapshot = None, thsnapshots = None):
+def fzero_solution(conf = 'SUBSO', snapshot = None, thsnapshots = None, iffit = False):
     '''
     thsnapshots are thprofile.dat files produced by acompace. If they are set, plotting snapshot is suppressed
     '''
@@ -97,7 +111,8 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None, thsnapshots = None):
     r_e = config[conf].getfloat('r_e_coeff') * (mu30**2/mdot)**(2./7.)*m1**(-10./7.) * xifac # magnetosphere radius
     afac = config[conf].getfloat('afac')
     drrat = config[conf].getfloat('drrat')
-    Dthick = config[conf].getfloat('Dthick')
+    tscale = config[conf].getfloat('tscale')
+    # Dthick = config[conf].getfloat('Dthick')
 
     theta0 = arcsin(sqrt(rstar/r_e)) # polar cap radius
     theta_out = arcsin(1./sqrt(1.+drrat**2))
@@ -107,7 +122,7 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None, thsnapshots = None):
     
     print("theta0 = ", theta0)
     print("k = ", k)
-    print("expected fout = ", 0.75 * Dthick**2)
+    # print("expected fout = ", 0.75 * Dthick**2)
     
     if snapshot is not None:
         linesT = loadtxt(snapshot) # 'vcomp/tireoutT.dat'
@@ -136,59 +151,74 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None, thsnapshots = None):
         for k in arange(nsnaps):
             linesT = loadtxt(thsnapshots[k])
             tharlist.append(linesT[::alias,0]) ; farlist.append(linesT[::alias,1]) ; uarlist.append(linesT[::alias,2]) ;  dfarlist.append(linesT[::alias,3]) ; duarlist.append(linesT[::alias,4])
+            print("fout = ", linesT[-1,1])
+            f0 = linesT[-1,1]
             
     # logarithmic bracketing
     # minimal fout should be 3/4 of the int, because we do not want f_surface to change sign
 
     # ii = input('f0')
+        
+    umagrat0 = -12. * log(sin(theta0)) + log(1.+3.*cos(theta0)**2) # + log(3.)
+
+    if (iffit):
+
+        lf1 = -2.0 ; lf2 = 2.0 ; tol = 1e-10
+
+        theta, fint1, u1 = uint(theta0, 10.**lf1, k, theta_out = theta_out, firstpoint = True)
+        theta, fint2, u2 = uint(theta0, 10.**lf2, k, theta_out = theta_out, firstpoint = True)
+        # (1.+3.*cos(theta)**2)/(1.+3.*cos(theta0)**2)*(sin(theta0)/sin(theta))**6
+        
+        # ii = input("theta")
+        
+        print("fout = ", 10.**lf1, ": f(0) = ", fint1, "; u[-1] = ", ucrit1)
+        print("fout = ", 10.**lf2, ": f(0) = ", fint2, "; u[-1] = ", ucrit2)
     
-    lf1 = -2.0 ; lf2 = 2.0 ; tol = 1e-10
+        # same sign is not expected
+        if (ucrit1*ucrit2 >= 0.):
+            return 0.
+        
+        while (abs(lf2-lf1) >  tol ):
+            lf = (lf1+lf2)/2.
+            theta, fint, u = uint(theta0, 10.**lf, k, theta_out = theta_out, firstpoint = True)
+            ucrit = u-umagrat0 - log(3.)
+            print("fout = ", 10.**lf, ": f(0) = ", fint)
+            if ((ucrit*ucrit1) >= 0.):
+                lf1 = lf
+            else:
+                lf2 = lf
 
-    theta, fint1, u1 = uint(theta0, 10.**lf1, k, theta_out = theta_out, firstpoint = True)
-    theta, fint2, u2 = uint(theta0, 10.**lf2, k, theta_out = theta_out, firstpoint = True)
+        f0 = 10.**lf2
 
-    umagrat = -12. * log(sin(theta0)) + log(1.+3.*cos(theta0)**2) # + log(3.)
-    ucrit1 = u1-umagrat-log(3.) ; ucrit2 = u2-umagrat - log(3.)
-    # (1.+3.*cos(theta)**2)/(1.+3.*cos(theta0)**2)*(sin(theta0)/sin(theta))**6
+    f0 = 0.75
+        
+    theta, fint, u = uint(theta0, f0, k, theta_out = theta_out)
+    umagrat = -12. * log(sin(theta)/sin(theta_out)) + log(1.+3.*cos(theta)**2) - log(1.+3.*cos(theta_out)**2) # + log(3.)
 
-    print(umagrat)
-    # ii = input("theta")
-
-    print("fout = ", 10.**lf1, ": f(0) = ", fint1, "; u[-1] = ", ucrit1)
-    print("fout = ", 10.**lf2, ": f(0) = ", fint2, "; u[-1] = ", ucrit2)
-
-    # same sign is not expected
-    if (ucrit1*ucrit2 >= 0.):
-        return 0.
-
-    while (abs(lf2-lf1) >  tol ):
-        lf = (lf1+lf2)/2.
-        theta, fint, u = uint(theta0, 10.**lf, k, theta_out = theta_out, firstpoint = True)
-        ucrit = u-umagrat - log(3.)
-        print("fout = ", 10.**lf, ": f(0) = ", fint)
-        if ((ucrit*ucrit1) >= 0.):
-            lf1 = lf
-        else:
-            lf2 = lf
-
-    theta, fint, u = uint(theta0, 10.**lf2,k, theta_out = theta_out)
+    umag = (1.+3.*cos(theta)**2)/(1.+3.*cos(theta0)**2)*(sin(theta0)/sin(theta))**12
+    
     u = exp(u-umagrat)
     
     print("beta = ", 0.75 * fint[0] * sin(theta0)**2)
     beta = 0.75 * fint[0] * sin(theta0)**2
+    print("theta = ", theta)
+    print("sin^-2(theta0) = ", 1./sin(theta0)**2)
+    print("f = ", 0.75 /sin(theta0)**2 * beta + 0.75 * (1./sin(theta)**2-1./sin(theta0)**2))
+    print("f = ", fint[-1] + 0.75 * (1./sin(theta)**2-1./sin(theta_out)**2))
     print("fout = ", fint[-1])
     
-    umag = (1.+3.*cos(theta)**2)/(1.+3.*cos(theta0)**2)*(sin(theta0)/sin(theta))**12 
     if snapshot is not None:
         umagsnap = (1.+3.*cos(thetaT)**2)/(1.+3.*cos(theta0)**2)*(sin(theta0)/sin(thetaT))**12 
         umagsnap0 = (1.+3.*cos(thetaT)**2)/sin(thetaT)**12 
 
-    print("U/Umag_out = ",(u/umag))
+    print("U/Umag = ",u)
 
+    unorm_lowk = (fint/fint[-1])**4
+    
     if thsnapshots is not None:
-        plots.subfint(theta, fint, u/umag, tharlist, uarlist, farlist)
+        plots.subfint(theta, fint, u, tharlist, uarlist, farlist, duTnorm = duarlist, dfT = dfarlist, unorm_lowk = unorm_lowk*exp(-umagrat))
     else:
-        plots.subfint(theta, fint, u/umag, thetaT, uT, fT * umagsnap0/umagsnap[0])
+        plots.subfint(theta, fint, u, thetaT, uT, fT * umagsnap0/umagsnap[0], unorm_lowk = unorm_lowk/umag)
     
     # ASCII output:
     fout = open('uint.dat', 'w+')
@@ -209,8 +239,21 @@ def fzero_solution(conf = 'ASOL_slowT4', snapshot = None, thsnapshots = None):
     fout.flush()
     fout.close()
 
-    return lf
+    # calculating the sound travel time
+    beta = 1. # no radiation losses
+    dtt = dtint(cos(theta)[::-1], (1.-beta)/sin(theta0)**2)
+    print("integral = ", dtt)
+    dtt = simpson(sqrt(1.+3.*cos(theta)**2)/sqrt(fint), x = -cos(theta))
+    print("integral = ", dtt)
+    print("Re = ", r_e)
+    t = r_e**1.5/sqrt(m1*3.) * dtt * tscale
+    print("T = ", t, "s")
+
+    print("fosc = ", 1./t, "Hz")
+    
+    # return lf
 
 # usage:
 # fzero_solution(conf='ASOL_slowT4', snapshot='vcomp/tireoutT.dat')
+# fzero_solution(conf = 'SUBSO', snapshot = None, thsnapshots = ['out_subso', 'out_bottom', 'out_zero'])
 

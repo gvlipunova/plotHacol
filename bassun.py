@@ -5,6 +5,10 @@ from scipy.optimize import fsolve
 from scipy.special import expn
 from scipy.integrate import simpson
 
+'''
+Analytical tools from Basko & Sunyaev 1976 etc. Shock front, beta, pulsation period veod. 
+'''
+
 def fxis(x, gamma, eta, n):
     return 1.+exp(gamma*x)*(x*expn(2,gamma)-expn(2,gamma*x)) - eta * gamma**0.25 * x**((n+0.5)/4.)
 

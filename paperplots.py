@@ -14,6 +14,8 @@ modellist = ['fidu', 'fidu2', 'nd', 'bs', 'mdot1', 'mdot3', 'wide', 'wi', 'wi1',
 
 modellist = ['mdot100h_1'] # ,'mdot100w', 'mdot100w3', 'mdot100w5', 'mdot100w10', 'mdot100w20', 'mdot100w50']
 
+modellist = ['out_subso', 'out_bottom', 'out_zero']
+
 def titanfetch():
 
     for a in modellist:

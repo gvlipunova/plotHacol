@@ -2,7 +2,7 @@ import numpy.random
 from numpy.random import rand
 from numpy import *
 from scipy.optimize import fsolve
-from scipy.special import expn
+from scipy.special import expn, jv, yn
 from scipy.integrate import simpson
 
 '''
@@ -72,4 +72,3 @@ def BSsolution(gamma, eta):
 
     return x, v, u
     
-

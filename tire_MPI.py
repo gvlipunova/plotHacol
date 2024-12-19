@@ -209,7 +209,8 @@ if ifplot:
     import plots
 if ifhdf:
     import hdfoutput as hdf
-import bassun as bs # Basko-Sunyaev solution 
+import bassun as bs # Basko-Sunyaev solution
+import besspec as besspec # Bessel linear perturbation solution
 import solvers as solv # Riemann solvers
 from sigvel import * # signal velocities
 from geometry import * # geometry
@@ -1403,6 +1404,14 @@ def alltire():
             if verbose:
                 print(conf+": r from "+str(r.min()/rstar)+" to "+str(r.max()/rstar))
                 print(conf+": r1 from "+str(r1.min())+" to "+str(r1.max()))
+            # perturbing the solution being restarted:
+            perturbamp = configactual.getfloat('perturbamp')
+            perturbmode = configactual.getint('perturmode')
+            # xs is calculated above, line 1330
+            function_ds = besspec.BesspecOmega(xs, perturbmode+1, outputn=perturbmode)
+            per_ds = function_ds(r1/rstar) / abs(per_ds).max() * perturbmode
+            v1 *= (1.+per_ds)
+            
             if(r.max()>(1.01*r1.max()*rstar)):
                 print("restarting: size does not match!")
                 return(1)

@@ -870,7 +870,7 @@ def onedomain(g, ghalf, icon, comm, hfile = None, fflux = None, ftot = None, t=0
         v0 = vout
         if ifturnoff:
             prim['rho'][-1] *= turnofffactor # reducing the mass flow at the outer limit
-        rightpack_save = {'rho': rhout, 'v': v0, 'u': uout} # why x3? is it radiation dominated?
+        rightpack_save = {'rho': rhout, 'v': v0, 'u': uout} 
         if verbose:
             print('setting outer BC\n')
             ## ii = input('OBC')
@@ -1406,11 +1406,22 @@ def alltire():
                 print(conf+": r1 from "+str(r1.min())+" to "+str(r1.max()))
             # perturbing the solution being restarted:
             perturbamp = configactual.getfloat('perturbamp')
-            perturbmode = configactual.getint('perturmode')
+            perturbxs = configactual.getfloat('perturbxs')
+            if perturbxs < 0.:
+                perturbxs = xs
+            perturbmode = configactual.getint('perturbmode')
             # xs is calculated above, line 1330
-            function_ds = besspec.BesspecOmega(xs, perturbmode+1, outputn=perturbmode)
-            per_ds = function_ds(r1/rstar) / abs(per_ds).max() * perturbmode
-            v1 *= (1.+per_ds)
+            function_ds = besspec.BesspecOmega(perturbxs, perturbmode+1, outputn=perturbmode)
+            per_ds = function_ds(r1)
+            per_ds = per_ds / abs(per_ds).max() * perturbamp
+            v2 = copy(v1)
+            v2 = v1 * (1.+per_ds)
+            if verbose:
+                print("max v perturbation = ", abs(v2-v1).max())
+                plots.someplots(r1, [v1, v2], name='fpulse_VV', xtitle=r'$R/R_*$', xlog=True, formatsequence = ['k:', 'r--'])
+                plots.someplots(r1, [v1-v2], name='fpulse_Vdiff', xtitle=r'$R/R_*$', xlog=True, formatsequence = ['k:', 'r--'])
+            v1 = v2
+            # ii = input('V')
             
             if(r.max()>(1.01*r1.max()*rstar)):
                 print("restarting: size does not match!")

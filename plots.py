@@ -178,6 +178,7 @@ def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitl
     clf()
     fig=figure()
     if(levels is not None):
+        print("plotting range ", levels.min(), "..", levels.max())
         pcolormesh(x, y, q, cmap='hot', vmin = levels.min(), vmax=levels.max())
     else:
         pcolormesh(x, y, q, cmap='hot')
@@ -870,7 +871,8 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT, duTnorm = None, dfT = None, 
     fig = figure()
     subplot(211)
     plot(theta, fint, 'k-')
-    plot(theta, fint[-1] + 0.75/tan(theta)**2, 'g-.')
+    # plot(theta,  0.75 + 0.75*(1./sin(theta)**2-1./sin(theta[-1])**2), 'g-.')
+    plot(theta,  0.75*(1./sin(theta)**2-1.), 'g-.')
     if nT>1:
         print(shape(thetaT), nT)
         for k in arange(nT):
@@ -890,14 +892,14 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT, duTnorm = None, dfT = None, 
     if unorm_lowk is not None:
         plot(theta, unorm_lowk, 'g-.')
 
-    if nT>1:
+    if nT>0:
         for k in arange(nT):
             if duTnorm is not None:
                 errorbar(thetaT[k], uTnorm[k], yerr = duTnorm[k], fmt = fseq[k], mfc = 'none')
             else:
                 plot(thetaT[k], uTnorm[k], fseq[k], mfc = 'none')
-    else:
-        plot(thetaT, uTnorm, 'b--')
+    # else:
+    #    plot(thetaT, uTnorm, 'b--')
 
     xlabel(r'$\theta$')
     ylabel(r'$u(\theta)/u_{\rm mag}(\theta)$')
@@ -907,3 +909,25 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT, duTnorm = None, dfT = None, 
     fig.tight_layout()
     savefig('uint0.png')
     savefig('uint0.pdf')
+
+    clf()
+    plot(fint, unorm, 'k-')
+    if unorm_lowk is not None:
+        plot(fint, unorm_lowk, 'r:')
+        
+    if nT>0:
+        for k in arange(nT):
+            if duTnorm is not None:
+                errorbar(fT[k], uTnorm[k], xerr = dfT[k], yerr = duTnorm[k], fmt = fseq[k], mfc = 'none')
+            else:
+                plot(fT[k], uTnorm[k], fseq[k], mfc = 'none')
+    xlabel(r'$f$')
+    ylabel(r'$u(\theta)/u_{\rm mag}(\theta)$')
+    ylim(1e-1,20.)
+    yscale('log')
+    fig.set_size_inches(4.,4.)
+    fig.tight_layout()
+    savefig('uintf.png')
+    savefig('uintf.pdf')
+
+    

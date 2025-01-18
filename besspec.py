@@ -63,6 +63,6 @@ def BesspecOmega(xs, nroots, outputn = -1):
     plots.someplots(x, fs, name='fpulse_sol', xtitle=r'$R/R_*$', xlog=True)
 
     if outputn >= 0:
-        fsoln = interp1d(x, fs[outputn], 'linear', fill_value="extrapolate")
+        fsoln = interp1d(x, fs[outputn], 'linear', bounds_error=False, fill_value=(0.,0.))
         return fsoln
     

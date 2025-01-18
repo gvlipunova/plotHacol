@@ -1218,7 +1218,7 @@ def quasi2d_nocalc(infile, conf = 'DEFAULT', trange = None):
         #  plots.somemap(r, t, log10(4.*pi *q*r**2/mdot), name=outdir+'/q2d_q', inchsize = [4, 12], cbtitle = r'$R^2 Q^- / L_{\rm Edd}$', xrange = trange, transpose=True) #, levels = 3.*arange(nv)/double(nv-2)-1.)
         plots.somemap(r, t, v, name=outdir+'/q2d_v', inchsize = [5, 10], cbtitle = r'$v/c$',  xrange = trange,transpose=True, levels = 0.125 * (arange(nv)/double(nv-1)-0.7))
         plots.somemap(r, t, lurel - log(3.), name=outdir+'/q2d_u', inchsize = [5, 10], cbtitle = r'$\log_{10} p/p_{\rm mag}$', xrange = trange, addcontour = [u/3./0.99, u/3./0.9, u/3./0.8],transpose=True)
-        plots.somemap(r, t, m, name=outdir+'/q2d_m', inchsize = [5, 10], cbtitle = r'$s / \dot{M}$', xrange = trange, transpose=True, levels = 3.*arange(nv)/double(nv-2)-1.)
+        plots.somemap(r, t, m, name=outdir+'/q2d_m', inchsize = [5, 10], cbtitle = r'$s / \dot{M}$', xrange = trange, transpose=True)
         teff = 4.75 * mass1**(-0.25) * (q/r**3)**0.25 # keV
         plots.somemap(r, t, q, name=outdir+'/q2d_q', inchsize = [5, 10], cbtitle = r'$Q R^3$', xrange = trange, transpose=True)
         plots.somemap(r, t, teff, name=outdir+'/q2d_teff', inchsize = [5, 10], cbtitle = r'$Teff$, keV', xrange = trange, transpose=True)
@@ -1385,7 +1385,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         plots.somemap(rnew, tar*tscale, log10(abs(ear)), name=outdir+'/q2d_qe', \
                 inchsize = [4, 12], cbtitle = r'$\log_{10}\left|F_{\rm diff}\right|$', transpose = True, xrange = trange, xlog = False, ylog=iflog)
         # mdot:
-        mdlev = 3.*arange(nv)/double(nv-2)-1.
+        mdlev = 1.5*arange(nv)/double(nv-2) # 3.*arange(nv)/double(nv-2)-1.
         plots.somemap(rnew, tar*tscale, mdar/mdot, name=outdir+'/q2d_m', \
                 inchsize = [4, 12], cbtitle = r'$s / \dot{M}$', levels = mdlev, \
                 transpose = True, xrange = trange, ylog=False, xlog=True) # , yrange=[1.,1.1], ylog = False)

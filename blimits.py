@@ -19,12 +19,14 @@ import matplotlib
 from matplotlib.pyplot import *
 
 import subsonic as sub
+import bassun as BS
 
 cmap = 'viridis'
 
 mass1 = 1.5 # NS mass in Solar masses
 xim = 0.5 # magnetosphere radius in RA
 rstar = 6.77159 / mass1 * 10./10. # NS radius in GM/c^2 for physical R = 10km
+realxirad = 1.5
 
 afac = 0.25
 drrat = 0.25
@@ -86,9 +88,9 @@ def shooting_beta(th0, k, verbose = True):
             
     return fint / 0.75 * sin(th0)**2, fout
         
-mdot1 = 1.0 ; mdot2 = 1000.0 ; nmdot = 200
+mdot1 = 1.0 ; mdot2 = 1000.0 ; nmdot = 120
 mdot = (mdot2/mdot1)**(arange(nmdot)/double(nmdot-1))*mdot1
-muar1 = 0.01 ; muar2 = 10. ; nmu = 201
+muar1 = 0.01 ; muar2 = 10. ; nmu = 121
 mu = (muar2/muar1)**(arange(nmu)/double(nmu-1))*muar1
 
 mdotar, muar = meshgrid(mdot, mu)
@@ -98,14 +100,25 @@ karr = afac / drrat * RAlf(mdotar, muar) * xim / rstar / mdotar
 beta_fint = copy(mdotar) * 0.
 
 fint = copy(mdotar)
+xis = copy(mdotar)
 
 print(shape(beta_fint))
 
 for kmdot in arange(nmdot):
     for kmu in arange(nmu):
-        beta_tmp, fint_tmp = shooting_beta(theta0(mdot[kmdot], mu[kmu]), karr[kmu, kmdot], verbose  = False)
+        th0 =  theta0(mdot[kmdot], mu[kmu])
+        delta0 = sin(th0)/sqrt(1.+3.*cos(th0)**2)*rstar*drrat
+        umag0 = (1.+3.*cos(th0)**2)/(rstar*mass1)**6 * 5.545e12 * mu[kmu]**2 # code units
+        beta_tmp, fint_tmp = shooting_beta(th0, karr[kmu, kmdot], verbose  = False)
         beta_fint[kmu, kmdot] = beta_tmp
         fint[kmu, kmdot] = fint_tmp
+        BSgamma = (4.*pi*afac/drrat) * sqrt(1.+3.*cos(th0)**2)/mdot[kmdot]*rstar / (realxirad/1.5) # Across/\delta^2 / mdot *rstar /(realxirad/1.5)
+        BSeta = (8./21./sqrt(2.) * umag0 * 3. * (realxirad/1.5))**0.25*sqrt(delta0)/(rstar)**0.125
+        print("BSgamma = ", BSgamma)
+        print("BSeta = ", BSeta)
+        # print( BS.xis(BSgamma, BSeta)/(xim*RAlf(mdot[kmdot], mu[kmu])))
+        xis[kmu, kmdot] = BS.xis(BSgamma, BSeta, x0 = 2.)/(xim*RAlf(mdot[kmdot], mu[kmu])/rstar)
+        print("xi = ", BS.xis(BSgamma, BSeta, x0 = 2.))
         # ii = input('beta')
 
 betarad_approx = 1.-lcor(mdotar, muar)/mdotar
@@ -117,13 +130,37 @@ betarad_masked = ma.masked_array(betarad, mask = (betarad > 1.) | (betarad < 0.)
 
 clf()
 fig, ax = subplots()
-pc = ax.pcolormesh(muar, mdotar, log10(fint), vmin = 0., vmax = 1.0)
+pc = ax.pcolormesh(muar, mdotar, log10(xis))
 cb = colorbar(pc)
+cb.set_label(r'$\log_{10}R_{\rm shock}/R_{\rm m}$')
+contour(muar, mdotar, xis, [0.0], colors = 'k', linewidths = 4.)
+ax.set_xlabel(r'$\mu$, $10^{30}$G cm$^3$') ; ax.set_ylabel(r'$\dot{M}c^2/L_{\rm Edd}$')
+ax.set_xscale('log') ; ax.set_yscale('log')
+fig.set_size_inches(10.,8.)
+savefig('blimits_xis.png')
+
+clf()
+fig, ax = subplots()
+pc = ax.pcolormesh(muar, mdotar, log10(fint), vmin = -2., vmax = 2.0)
+cb = colorbar(pc)
+cb.set_label(r'$\log_{10}f_{\rm out}$')
 contour(muar, mdotar, fint, [1.0], colors = 'k', linewidths = 4.)
 ax.set_xlabel(r'$\mu$, $10^{30}$G cm$^3$') ; ax.set_ylabel(r'$\dot{M}c^2/L_{\rm Edd}$')
 ax.set_xscale('log') ; ax.set_yscale('log')
 fig.set_size_inches(10.,8.)
 savefig('blimits_fint.png')
+
+
+clf()
+fig, ax = subplots()
+pc = ax.pcolormesh(muar, mdotar, log10(karr), vmin = -2., vmax = 2.0)
+cb = colorbar(pc)
+cb.set_label(r'$\log_{10}k$')
+contour(muar, mdotar, karr, [1.0], colors = 'k', linewidths = 4.)
+ax.set_xlabel(r'$\mu$, $10^{30}$G cm$^3$') ; ax.set_ylabel(r'$\dot{M}c^2/L_{\rm Edd}$')
+ax.set_xscale('log') ; ax.set_yscale('log')
+fig.set_size_inches(10.,8.)
+savefig('blimits_karr.png')
 
 
 clf()
@@ -140,17 +177,34 @@ fmt = {}
 for l, s in zip(c.levels, formatstring):
     fmt[l] = s
 
-ax.clabel(c, c.levels, inline_spacing = -10, fmt = fmt)
-ax.clabel(c0, c0.levels, inline_spacing = -10, fmt = fmt)
+ax.clabel(c, c.levels, inline_spacing = 0, fmt = fmt)
+ax.clabel(c0, c0.levels, inline_spacing = 0, fmt = fmt)
 cs1 = ax.contourf(muar, mdotar, excluded, [-1, 0., 1., 2.], linestyles = 'solid', hatches=['', '//'], alpha = 1.0)
 cs1.set_facecolor('none')
 cs1.set_edgecolor('w')
 # bar.set_edgecolor('k')
 # cs2 = ax.contourf(muar, mdotar, betarad, [-10., 0., 1.], hatches=['\\', '', '||'], alpha = 1.0)
-cs2 = ax.contourf(muar, mdotar, fint, [-10., 0., 1., 1000.], hatches=['\\', '', '\\', '||'], alpha = 1.0)
+cs2 = ax.contourf(muar, mdotar, fint, [-10., 0., 1., 1000.], hatches=['\\', '', '--', '||'], alpha = 1.0)
 cs2.set_facecolor('none')
 cs2.set_edgecolor('w')
+cs3 = ax.contour(muar, mdotar, xis, [1.], colors='w', linewidths=3, linestyles='dashed') #, hatches=['||', '', '--'], alpha = 1.0)
+# cs3.set_facecolor('none')
+# cs3.set_edgecolor('w')
 ax.set_xlabel(r'$\mu$, $10^{30}$G cm$^3$') ; ax.set_ylabel(r'$\dot{M}c^2/L_{\rm Edd}$')
 ax.set_xscale('log') ; ax.set_yscale('log')
+plot([0.1], [300.], '*k', markersize = 20.0, mfc = 'none')
 fig.set_size_inches(10.,8.)
 savefig('blimits.png')
+
+
+clf()
+fig = figure()
+scatter(betarad[fint<1.0], karr[fint<1.], c = log10(muar[fint<1.0]))
+scatter(betarad[fint>1.0], karr[fint>1.0], c = log10(muar[fint>1.0]), facecolors='none')
+cb = colorbar()
+cb.set_label(r'$\log_{10}\mu_{30}$')
+yscale('log')
+ylabel(r'$k$') ; xlabel(r'$\beta$')
+xlim(0.,1.)
+fig.set_size_inches(8.,6.)
+savefig('blimits_skar.png')

@@ -162,7 +162,7 @@ def splot(x, y, name='outplot', fmt='-k', xtitle=r'$r$', ytitle=r'$S(R)$'):
     savefig(name+'.png')
     close('all')
 
-def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitle='$t$, s', levels = None, inchsize = None, cbtitle = None, addcontour = None, transpose = False, xrange=None, yrange = None):
+def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitle='$t$, s', levels = None, inchsize = None, cbtitle = None, addcontour = None, transpose = False, xrange=None, yrange = None, shading = 'flat'):
     '''
     plots a 2dmap
     '''
@@ -179,9 +179,9 @@ def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitl
     fig=figure()
     if(levels is not None):
         print("plotting range ", levels.min(), "..", levels.max())
-        pcolormesh(x, y, q, cmap='hot', vmin = levels.min(), vmax=levels.max())
+        pcolormesh(x, y, q, cmap='hot', vmin = levels.min(), vmax=levels.max(), shading = shading)
     else:
-        pcolormesh(x, y, q, cmap='hot')
+        pcolormesh(x, y, q, cmap='hot', shading = shading)
     cb = colorbar()
     if cbtitle is not None:
         cb.set_label(r' '+cbtitle, fontsize=14)

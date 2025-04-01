@@ -2,6 +2,7 @@ import postpro
 import plots
 import os
 from numpy import *
+from scipy.interpolate import interp1d
 
 import configparser as cp
 conffile = 'globals.conf'
@@ -313,3 +314,43 @@ def voutshow():
     vDT = linesDT[:,2]
 
     plots.someplots([rT, rDT], [vT, vDT], name = 'vcomp/vcomp', formatsequence = ['k-', 'r:'], xtitle=r'$R/R_*$', ytitle=r'$v/c$', multix = True, xlog = True, legendsequence = ['T4', 'DT4'])
+
+
+def vplots():
+
+    nth = 300
+    
+    ms = [30.,40.,50.,70.,100.,120., 150., 200., 250., 300., 400., 500.]
+
+    nms = size(ms)
+    dirs = [] ; confs = []
+    
+    for k in arange(nms):
+        confs.append('MARRAY{:03d}'.format(int(ms[k])))
+        ddir = config['MARRAY{:03d}'.format(int(ms[k]))].get('outdir')
+        dirs.append(ddir)
+
+    print(dirs)
+
+    formatsequence = ['k.', 'rx', 'gd', 'b*', 'mv']
+    
+    thlist = [] ; vlist = []
+
+    thgrid = arange(nth)/double(nth) * pi/2. 
+
+    vgrid = zeros([nth, nms])
+    
+    for k in arange(nms):
+        postpro.acomparer(dirs[k]+'/tireout', nentry = [1000,1050], savetheta = True, conf = confs[k])
+        th, v = postpro.readtireout(dirs[k]+'/thprofile', ncol = 1)
+        x, q = postpro.readtireout(dirs[k]+'/avprofile', ncol = [3, 2, 1])
+        u, v, rho = q
+        thlist.append(th) ; vlist.append(v)
+        vfun = interp1d(th, v, bounds_error = False)
+        vgrid[:,k] = vfun(thgrid)
+        
+    plots.someplots(thlist, vlist, formatsequence = None, multix = True, name = 'vvcomp')
+
+    plots.somemap(ms, thgrid, log10(vgrid), name = 'vvmap', shading = 'nearest', cbtitle  = r'$\log_{10}v/c$', xlog = True, ylog = False,
+                  xtitle = r'$\dot{m}$', ytitle = r'$\theta$')
+    

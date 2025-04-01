@@ -153,6 +153,45 @@ def galjaread(infile):
     
     return x, u, v, rho, prat
 
+def xis_conf(conf, x0 = 4.):
+    '''
+    takes a configuration file and calculates the analytic solution using bassun.py
+    '''
+
+    # can this be done without geo.dat?
+    rstar = config[conf].getfloat('rstar')
+    rstarg = rstar
+    m1 = config[conf].getfloat('m1')
+    mu30 = config[conf].getfloat('mu30')
+    mdot = config[conf].getfloat('mdot') * 4.*pi # TODO: should it be multiplied by mass1?
+    afac = config[conf].getfloat('afac')
+    xifac = config[conf].getfloat('xifac')
+    mass1 = config[conf].getfloat('m1')
+    tscale = config[conf].getfloat('tscale') * mass1
+    rhoscale = config[conf].getfloat('rhoscale') / mass1
+    realxirad = config[conf].getfloat('xirad')
+    mow = config[conf].getfloat('mow')
+    b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
+    umag = b12**2*2.29e6*m1 # on the pole, there is a correction to cth we do not take here into account (but neither do BS)
+    r_e = config[conf].getfloat('r_e_coeff') * (mu30**2/mdot)**(2./7.)*m1**(-10./7.) * xifac # magnetosphere radius
+    drrat = config[conf].getfloat('drrat')
+     
+    sth=sqrt(rstar/r_e) ; cth=sqrt(1.-rstar/r_e) 
+    delta0 = rstar * sth/sqrt(1.+3.*cth**2) * drrat 
+    # transverse thickness of the flow 
+    across0 = 2. * delta0 * 2. * pi * afac * rstar * sth # cross-section: first 2 from
+    
+    # umag is magnetic pressure
+    BSgamma = (across0/delta0**2)/mdot*rstar / (realxirad/1.5)
+    # b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units    
+    BSeta = (8./21./sqrt(2.)*umag*3. * (realxirad/1.5))**0.25*sqrt(delta0)/(rstar)**0.125
+    
+    print("BSgamma = "+str(BSgamma))
+    print("BSeta = "+str(BSeta))
+    xs, BSbeta = bs.xis(BSgamma, BSeta, x0=x0, ifbeta = True)
+
+    return xs, BSbeta
+
 def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = False, trange = None, savetheta = False):
     '''
     compares the structure of the flow to the analytic solution by B&S76

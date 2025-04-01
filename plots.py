@@ -13,12 +13,12 @@ import re
 import os
 
 #Uncomment the following if you want to use LaTeX in figures 
-# rc('font',**{'family':'serif'})
-# rc('mathtext',fontset='cm')
-# rc('mathtext',rm='stix')
-# rc('text', usetex=True)
+rc('font',**{'family':'serif'})
+rc('mathtext',fontset='cm')
+rc('mathtext',rm='stix')
+rc('text', usetex=True)
 # #add amsmath to the preamble
-# matplotlib.rcParams['text.latex.preamble']=[r"\usepackage{amssymb,amsmath}"] 
+## matplotlib.rcParams['text.latex.preamble']=[r"\usepackage{amssymb,amsmath}"] 
 
 from hdfoutput import read, entryname
 import geometry as geo
@@ -162,9 +162,11 @@ def splot(x, y, name='outplot', fmt='-k', xtitle=r'$r$', ytitle=r'$S(R)$'):
     savefig(name+'.png')
     close('all')
 
-def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitle='$t$, s', levels = None, inchsize = None, cbtitle = None, addcontour = None, transpose = False, xrange=None, yrange = None, shading = 'flat'):
+def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitle='$t$, s', levels = None, inchsize = None, cbtitle = None, addcontour = None, transpose = False, xrange=None, yrange = None, shading = 'flat', addy = False):
     '''
     plots a 2dmap
+    ...
+    addy overplots an y(x) line
     '''
     if transpose:
         x, y = y, x
@@ -202,6 +204,13 @@ def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitl
                 else:
                     contour(x, y, addcontour[kd], levels=[1.], colors='k')
 
+    if addy is not None:
+        if size(addy)<= 1:
+            plot(x, addy, 'w.', mfc = 'none')
+        else:
+            print(shape(addy))
+            for qq in arange(shape(addy)[0]):
+                plot(x, addy[qq], 'k-')
     if(xlog):
         xscale('log')
     if(ylog):
@@ -239,7 +248,7 @@ def plot_somemap(fname, ncol = -1, xlog = True):
     levs = (lev2-lev1) * arange(nl)/double(nl-1)+lev1
     somemap(x, y, q, name=fname, xlog=xlog, xtitle=r'$r/R_*$', ytitle = r'$t$, s', transpose=True, levels = levs, inchsize = [3,10])
     
-def someplots(x, ys, name='outplot', ylog = False, xlog = True, xtitle=r'$r$', ytitle='', formatsequence = None, legendsequence = None, vertical = None, verticalformatsequence = None, multix = False, yrange = None, xrange = None, inchsize = None, dys = None, linewidthsequence = None, secaxfunpair = None):
+def someplots(x, ys, name='outplot', ylog = False, xlog = True, xtitle=r'$r$', ytitle='', formatsequence = None, legendsequence = None, vertical = None, verticalformatsequence = None, multix = False, yrange = None, xrange = None, inchsize = None, dys = None, linewidthsequence = None, secaxfunpair = None, yshifts = None):
     '''
     plots a series of curves  
     if multix is off, we assume that the independent variable is the same for all the data 
@@ -265,14 +274,16 @@ def someplots(x, ys, name='outplot', ylog = False, xlog = True, xtitle=r'$r$', y
 
     if formatsequence is None:
         formatsequence = ["." for x in range(ny)]
-    if legendsequence is None:
-        legendsequence = ["" for x in range(ny)]
+    #if legendsequence is None:
+    #    legendsequence = ["" for x in range(ny)]
     if linewidthsequence is None:
         linewidthsequence = [1 for x in range(ny)]
         
     clf()
     fig, ax = subplots()
     for k in arange(ny):
+        if yshifts is not None:
+            ys[k] += yshifts[k] # vertical shift
         if vertical is not None:
             if verticalformatsequence is None:
                 verticalformatsequence = formatsequence[-1]
@@ -283,7 +294,12 @@ def someplots(x, ys, name='outplot', ylog = False, xlog = True, xtitle=r'$r$', y
                 for kv in arange(nv):
                     plot([vertical[kv], vertical[kv]], [ys[k].min(), ys[k].max()], verticalformatsequence)
         if multix:
-            plot(x[k], ys[k], formatsequence[k], linewidth = linewidthsequence[k], label = legendsequence[k])
+            plot(x[k], ys[k], formatsequence[k], linewidth = linewidthsequence[k])
+            if legendsequence is not None:
+                if yshifts is not None:
+                    text(x[k][0], ys[k][0], legendsequence[k])
+                else:
+                    text(x[k][0], ys[k][0]+ys.std()*0.25, legendsequence[k])
         else:
             plot(x, ys[k], formatsequence[k], linewidth = linewidthsequence[k])
             
@@ -313,8 +329,8 @@ def someplots(x, ys, name='outplot', ylog = False, xlog = True, xtitle=r'$r$', y
         fig.set_size_inches(inchsize[0], inchsize[1])
     else:
         fig.set_size_inches(5, 4)
-    if legendsequence is not None:
-        fig.legend(loc='lower right', borderaxespad=0.,)    
+    #if legendsequence is not None:
+    #    fig.legend(loc='lower right', borderaxespad=0.,)    
         #loc='upper center',ncol=4,
                #fancybox=True,   bbox_to_anchor=(0.9, 0.5),
                 
@@ -864,35 +880,36 @@ def plot_dts(n, prefix = 'out/tireout', postfix = '.dat', conf = 'DEFAULT'):
 
 def subfint(theta, fint, unorm, thetaT, uTnorm, fT, duTnorm = None, dfT = None, unorm_lowk = None):
 
-    nT = shape(thetaT)[0]
+    nT = len(thetaT)
     fseq = ['or', 'xg', 'db']
     
     clf()
     fig = figure()
-    subplot(211)
+    subplot(121)
     plot(theta, fint, 'k-')
     # plot(theta,  0.75 + 0.75*(1./sin(theta)**2-1./sin(theta[-1])**2), 'g-.')
     plot(theta,  0.75*(1./sin(theta)**2-1.), 'g-.')
-    if nT>1:
-        print(shape(thetaT), nT)
+    if nT>=1:
+        # print(shape(thetaT), nT)
         for k in arange(nT):
             if dfT is not None:
+                print("are we here?")
                 errorbar(thetaT[k], fT[k], yerr = dfT[k], fmt = fseq[k], mfc = 'none')
             else:
                 plot(thetaT[k], fT[k], fseq[k], mfc = 'none')
-    else:
-        plot(thetaT, fT, 'b--')
+            #    else:
+            #        plot(thetaT, fT, 'b--')
     xlabel(r'$\theta$')
     ylabel(r'$f(\theta)$')
     yscale('log')
-    subplot(212)
+    subplot(122)
     plot(theta, unorm, 'k-')
     plot(theta, unorm*0.+3., 'r:')
     plot(theta, unorm*0.+1., 'r:')
     if unorm_lowk is not None:
         plot(theta, unorm_lowk, 'g-.')
 
-    if nT>0:
+    if nT>=1:
         for k in arange(nT):
             if duTnorm is not None:
                 errorbar(thetaT[k], uTnorm[k], yerr = duTnorm[k], fmt = fseq[k], mfc = 'none')
@@ -905,7 +922,7 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT, duTnorm = None, dfT = None, 
     ylabel(r'$u(\theta)/u_{\rm mag}(\theta)$')
     ylim(1e-1,20.)
     yscale('log')
-    fig.set_size_inches(4.,6.)
+    fig.set_size_inches(5.,4.)
     fig.tight_layout()
     savefig('uint0.png')
     savefig('uint0.pdf')
@@ -915,7 +932,7 @@ def subfint(theta, fint, unorm, thetaT, uTnorm, fT, duTnorm = None, dfT = None, 
     if unorm_lowk is not None:
         plot(fint, unorm_lowk, 'r:')
         
-    if nT>0:
+    if nT>=1:
         for k in arange(nT):
             if duTnorm is not None:
                 errorbar(fT[k], uTnorm[k], xerr = dfT[k], yerr = duTnorm[k], fmt = fseq[k], mfc = 'none')

@@ -320,7 +320,7 @@ def vplots():
 
     nth = 300
     
-    ms = [30.,40.,50.,70.,100.,120., 150., 200., 250., 300., 400., 500.]
+    ms = [10., 20., 30., 40.,50.,70.,100.,120., 150., 200., 250., 300., 500.]
 
     nms = size(ms)
     dirs = [] ; confs = []
@@ -336,21 +336,36 @@ def vplots():
     
     thlist = [] ; vlist = []
 
-    thgrid = arange(nth)/double(nth) * pi/2. 
+    thgrid = arange(nth)/double(nth) * (1.4-0.3) + 0.3
 
     vgrid = zeros([nth, nms])
+
+    thsurface = zeros(nms)   ; thshock = zeros(nms)   ; xshock = zeros(nms)
     
     for k in arange(nms):
-        postpro.acomparer(dirs[k]+'/tireout', nentry = [1000,1050], savetheta = True, conf = confs[k])
+        postpro.acomparer(dirs[k]+'/tireout', nentry = [-100,-1], savetheta = True, conf = confs[k])
         th, v = postpro.readtireout(dirs[k]+'/thprofile', ncol = 1)
-        x, q = postpro.readtireout(dirs[k]+'/avprofile', ncol = [3, 2, 1])
-        u, v, rho = q
-        thlist.append(th) ; vlist.append(v)
+        x, q = postpro.readtireout(dirs[k]+'/avprofile', ncol = 1)
+        # ii = input(x.min())
+        v = q
+        thlist.append(th*180./pi) ; vlist.append(v)
         vfun = interp1d(th, v, bounds_error = False)
         vgrid[:,k] = vfun(thgrid)
-        
-    plots.someplots(thlist, vlist, formatsequence = None, multix = True, name = 'vvcomp')
+        thsurface[k] = th.min()
+        xs, bs = postpro.xis_conf(confs[k], x0 = 10.)
+        thfun = interp1d(x, th, bounds_error = False)
+        thshock[k] = thfun(xs)
+        xshock[k] = xs
 
-    plots.somemap(ms, thgrid, log10(vgrid), name = 'vvmap', shading = 'nearest', cbtitle  = r'$\log_{10}v/c$', xlog = True, ylog = False,
-                  xtitle = r'$\dot{m}$', ytitle = r'$\theta$')
+    legendsequence = list(map(lambda y: r'$\dot{m} = '+str(y)+'$', ms))
+    print(legendsequence)
+
+    yshifts = 0.05*arange(nms)
+
+    rstar = config['DEFAULT'].getfloat('rstar')
+    
+    plots.someplots(thlist, vlist, formatsequence = ['k-', 'r--', 'g-.', 'b:'] * 4, multix = True, name = 'vvcomp', yshifts =list(0.05*arange(nms)), inchsize = [5.,10.], xtitle=r'$\theta$, deg', ytitle=r'$v/c$', legendsequence = legendsequence, xlog = False)
+
+    plots.somemap(ms, thgrid, log10(-vgrid), name = 'vvmap', shading = 'nearest', cbtitle  = r'$\log_{10}v/c$', xlog = False, ylog = False,
+                  xtitle = r'$\dot{m}$', ytitle = r'$\theta$', addy = [thsurface, thshock], inchsize = [5.,12.])
     

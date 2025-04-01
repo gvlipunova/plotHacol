@@ -237,6 +237,8 @@ def fzero_solution(conf = 'SUBSO', snapshot = None, thsnapshots = None, iffit = 
     unorm_lowk = (fan/fan[0])**(4.) * umag[0] / umag
     
     if thsnapshots is not None:
+        # print(len(tharlist))
+        # ii = input('far')
         plots.subfint(theta, fint, u, tharlist, uarlist, farlist, duTnorm = duarlist, dfT = dfarlist, unorm_lowk = unorm_lowk)
     else:
         plots.subfint(theta, fint, u, thetaT, uT, fT * umagsnap0/umagsnap[0], unorm_lowk = unorm_lowk)
@@ -289,6 +291,6 @@ def fzero_solution(conf = 'SUBSO', snapshot = None, thsnapshots = None, iffit = 
 
 # usage:
 # fzero_solution(conf='ASOL_slowT4', snapshot='vcomp/tireoutT.dat')
-# fzero_solution(conf = 'SUBSO', snapshot = None, thsnapshots = ['out_subso', 'out_bottom', 'out_zero'])
+# fzero_solution(conf = 'SUBSO', snapshot = None, thsnapshots = ['out_subso/thprofile.dat', 'out_bottom/thprofile.dat', 'out_zero/thprofile.dat'])
 
 # 

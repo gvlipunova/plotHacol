@@ -220,7 +220,11 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
             inhdf = infile + '.hdf5'
             sintry = size(nentry)
             if sintry <= 1:
-                entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff  = hdf.read(inhdf, nentry)
+                if nentry >= 0:
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff  = hdf.read(inhdf, nentry)
+                else:
+                    nens = hdf.keynums(inhdf) # nentry = -1 should represent the last snapshot
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff  = hdf.read(inhdf, nens[nentry])
                 betap = Fbeta(rhop, up, betacoeff)
                 dv = vp *0.
                 du = up *0.
@@ -228,7 +232,12 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
                 dbeta = betap*0.
                 dqloss = qloss * 0.
             else:
-                entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff = hdf.read(inhdf, nentry[0])
+                if nentry[0] >=0: # we know the numbers
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff = hdf.read(inhdf, nentry[0])
+                else:
+                    nens = hdf.keynums(inhdf)
+                    print(nens)
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff = hdf.read(inhdf, nens[0])
                 beta1 = Fbeta(rhop, up, betacoeff)
                 betap = copy(beta1)
                 nentries = 0 # nentry[1]-nentry[0]
@@ -238,7 +247,10 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
                 dbeta = copy(beta1)**2
                 dqloss = copy(qloss)**2
                 for k in arange(nentry[1]-nentry[0])+nentry[0]+1:
-                    entry1, t, l, xp, sth, rho1, up1, vp1, qloss1, glo1, ediff1  = hdf.read(inhdf, k)
+                    if nentry[0] >=0: # we know the numbers
+                        entry1, t, l, xp, sth, rho1, up1, vp1, qloss1, glo1, ediff1  = hdf.read(inhdf, k)
+                    else:
+                        entry1, t, l, xp, sth, rho1, up1, vp1, qloss1, glo1, ediff1 = hdf.read(inhdf, nens[k]) # we are counting from the back, say [-100,-1]
                     beta1 = Fbeta(rho1, up1, betacoeff)
                     t *= tscale
                     # print("t="+str(t))

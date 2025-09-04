@@ -343,7 +343,7 @@ def vplots():
     thsurface = zeros(nms)   ; thshock = zeros(nms)   ; xshock = zeros(nms)
     
     for k in arange(nms):
-        postpro.acomparer(dirs[k]+'/tireout', nentry = [-100,-1], savetheta = True, conf = confs[k])
+        postpro.acomparer(dirs[k]+'/tireout', nentry = [-300,-1], savetheta = True, conf = confs[k])
         th, v = postpro.readtireout(dirs[k]+'/thprofile', ncol = 1)
         x, q = postpro.readtireout(dirs[k]+'/avprofile', ncol = 1)
         # ii = input(x.min())

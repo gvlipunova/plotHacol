@@ -38,8 +38,11 @@ def RAlf(mdot, mu30):
     # Alfven radius in GM/c^2 units
     return 1577.74 * mu30**(4./7.)/mdot**(2./7.)/mass1**(10./7.)
 
+def Rsph(mdot):
+    return 1.5 * mdot
+
 def theta0(mdot, mu30):
-    return arcsin(sqrt(rstar / RAlf(mdot, mu30)/xim))
+    return arcsin((sqrt(rstar / RAlf(mdot, mu30)/xim)))
 
 def lcor(mdot, mu30):
     # luminosity of the subsonic flow in Eddington units
@@ -88,9 +91,9 @@ def shooting_beta(th0, k, verbose = True):
             
     return fint / 0.75 * sin(th0)**2, fout
         
-mdot1 = 1.0 ; mdot2 = 1000.0 ; nmdot = 120
+mdot1 = 10.0 ; mdot2 = 1000.0 ; nmdot = 122
 mdot = (mdot2/mdot1)**(arange(nmdot)/double(nmdot-1))*mdot1
-muar1 = 0.01 ; muar2 = 10. ; nmu = 121
+muar1 = 0.003 ; muar2 = 30. ; nmu = 121
 mu = (muar2/muar1)**(arange(nmu)/double(nmu-1))*muar1
 
 mdotar, muar = meshgrid(mdot, mu)
@@ -98,6 +101,7 @@ mdotar, muar = meshgrid(mdot, mu)
 karr = afac / drrat * RAlf(mdotar, muar) * xim / rstar / mdotar
 
 beta_fint = copy(mdotar) * 0.
+beta_BS =  copy(mdotar) * 0.
 
 fint = copy(mdotar)
 xis = copy(mdotar)
@@ -114,11 +118,13 @@ for kmdot in arange(nmdot):
         fint[kmu, kmdot] = fint_tmp
         BSgamma = (4.*pi*afac/drrat) * sqrt(1.+3.*cos(th0)**2)/mdot[kmdot]*rstar / (realxirad/1.5) # Across/\delta^2 / mdot *rstar /(realxirad/1.5)
         BSeta = (8./21./sqrt(2.) * umag0 * 3. * (realxirad/1.5))**0.25*sqrt(delta0)/(rstar)**0.125
+        print("theta0 = ", th0)
         print("BSgamma = ", BSgamma)
         print("BSeta = ", BSeta)
         # print( BS.xis(BSgamma, BSeta)/(xim*RAlf(mdot[kmdot], mu[kmu])))
-        xis[kmu, kmdot] = BS.xis(BSgamma, BSeta, x0 = 2.)/(xim*RAlf(mdot[kmdot], mu[kmu])/rstar)
-        print("xi = ", BS.xis(BSgamma, BSeta, x0 = 2.))
+        xis[kmu, kmdot], beta_BS[kmu,kmdot] = BS.xis(BSgamma, BSeta, x0 = maximum(2.,(xim*RAlf(mdot[kmdot], mu[kmu])/rstar)), ifbeta = True)
+        # /(xim*RAlf(mdot[kmdot], mu[kmu])/rstar)
+        print("xi = ", BS.xis(BSgamma, BSeta, x0 = sqrt(xim*RAlf(mdot[kmdot], mu[kmu])/rstar)), "xie = ", xim*RAlf(mdot[kmdot], mu[kmu])/rstar)
         # ii = input('beta')
 
 betarad_approx = 1.-lcor(mdotar, muar)/mdotar
@@ -130,7 +136,7 @@ betarad_masked = ma.masked_array(betarad, mask = (betarad > 1.) | (betarad < 0.)
 
 clf()
 fig, ax = subplots()
-pc = ax.pcolormesh(muar, mdotar, log10(xis))
+pc = ax.pcolormesh(muar, mdotar, log10(xis/(xim*RAlf(mdotar, muar)/rstar)))
 cb = colorbar(pc)
 cb.set_label(r'$\log_{10}R_{\rm shock}/R_{\rm m}$')
 contour(muar, mdotar, xis, [0.0], colors = 'k', linewidths = 4.)
@@ -166,11 +172,16 @@ savefig('blimits_karr.png')
 clf()
 fig, ax = subplots()
 pc = ax.pcolormesh(muar, mdotar, betarad, vmin = 0., vmax = 1.0)
-cb = colorbar(pc, ax = ax)
-cb.set_label(r'$\beta$')
+cb = colorbar(pc, ax = ax, orientation='horizontal', location = 'top', aspect = 50)
+cb.set_label(r'$\beta$', fontsize=14)
 ax.contour(muar, mdotar, betarad, [2./3.], colors = 'k', linewidths = 4.)
 c = ax.contour(muar, mdotar, betarad, [0.5, 0.75, 0.9, 0.99], colors = 'k', linewidths = 1.)
-c0 = ax.contour(muar, mdotar, betarad_approx, [0.5, 0.75, 0.9, 0.99], colors = 'k', linewidths = 1., linestyles=':')
+# c0 = ax.contour(muar, mdotar, betarad_approx, [0.5, 0.75, 0.9, 0.99], colors = 'k', linewidths = 1., linestyles=':')
+c0 = ax.contour(muar, mdotar, beta_BS, [0.2, 0.3, 0.5, 0.75, 0.9, 0.99], colors = 'k', linewidths = 1., linestyles=':')
+c06 = ax.contour(muar, mdotar, beta_BS, [2./3.], colors = 'k', linestyles=':', linewidths = 4.)
+
+csph = ax.contour(muar, mdotar, Rsph(mdotar)/(RAlf(mdotar, muar)*0.5), levels = [1], colors = 'r')
+csphs = ax.contour(muar, mdotar, Rsph(mdotar)/sqrt(RAlf(mdotar, muar)*0.5), levels = [1], colors = 'r', linestyles = 'dotted')
 
 formatstring = ['0.5', '0.75', '0.9', '0.99']
 fmt = {}
@@ -187,13 +198,20 @@ cs1.set_edgecolor('w')
 cs2 = ax.contourf(muar, mdotar, fint, [-10., 0., 1., 1000.], hatches=['\\', '', '--', '||'], alpha = 1.0)
 cs2.set_facecolor('none')
 cs2.set_edgecolor('w')
-cs3 = ax.contour(muar, mdotar, xis, [1.], colors='w', linewidths=3, linestyles='dashed') #, hatches=['||', '', '--'], alpha = 1.0)
+cs3 = ax.contour(muar, mdotar, log10(xis/(xim*RAlf(mdotar, muar)/rstar)), [0.], colors='w', linewidths=3, linestyles='dashed') #, hatches=['||', '', '--'], alpha = 1.0)
 # cs3.set_facecolor('none')
 # cs3.set_edgecolor('w')
-ax.set_xlabel(r'$\mu$, $10^{30}$G cm$^3$') ; ax.set_ylabel(r'$\dot{M}c^2/L_{\rm Edd}$')
+cs4 = ax.contourf(muar, mdotar, RAlf(mdotar, muar)*0.5/rstar, [-1., 1.], colors='w', linewidths=3, hatches=['||', '', '--'], alpha = 1.0)
+cs4.set_facecolor('none')
+cs4.set_edgecolor('k')
+ax.set_xlabel(r'$\mu$, $10^{30}$G cm$^3$',fontsize=16) ; ax.set_ylabel(r'$\dot{M}c^2/L_{\rm Edd}$', fontsize=16)
 ax.set_xscale('log') ; ax.set_yscale('log')
+secax = ax.secondary_yaxis('right', functions = (lambda x: 3.78269e-09 * x, lambda x: x/3.78269e-09))
+secax.set_ylabel(r'$\dot{M}$, $M_\odot \, \rm yr^{-1}$', fontsize = 16, loc='center')
 plot([0.1], [300.], '*k', markersize = 20.0, mfc = 'none')
-fig.set_size_inches(10.,8.)
+tick_params(labelsize=14, length=3, width=1., which='major')
+tick_params(labelsize=14, length=1, width=1., which='minor')
+fig.set_size_inches(12.,8.)
 savefig('blimits.png')
 
 

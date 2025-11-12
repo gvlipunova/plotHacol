@@ -162,7 +162,7 @@ def splot(x, y, name='outplot', fmt='-k', xtitle=r'$r$', ytitle=r'$S(R)$'):
     savefig(name+'.png')
     close('all')
 
-def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitle='$t$, s', levels = None, inchsize = None, cbtitle = None, addcontour = None, transpose = False, xrange=None, yrange = None, shading = 'flat', addy = False):
+def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitle='$t$, s', levels = None, inchsize = None, cbtitle = None, addcontour = None, transpose = False, xrange=None, yrange = None, shading = 'nearest', addy = False):
     '''
     plots a 2dmap
     ...
@@ -206,11 +206,11 @@ def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitl
 
     if addy is not None:
         if size(addy)<= 1:
-            plot(x, addy, 'w.', mfc = 'none')
+            plot(x, x*0. + addy, 'w.', mfc = 'none')
         else:
             print(shape(addy))
             for qq in arange(shape(addy)[0]):
-                plot(x, addy[qq], 'k-')
+                plot(x, x*0. + addy[qq], 'k-')
     if(xlog):
         xscale('log')
     if(ylog):

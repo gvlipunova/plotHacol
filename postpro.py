@@ -1426,8 +1426,8 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         print(lulev)
         plots.somemap(rnew, tar*tscale, lurel, name=outdir+'/q2d_u', levels = lulev, \
                 inchsize = [4, 12], cbtitle = r'$\log_{10}u/u_{\rm mag}$', \
-                addcontour = [par/umagtarnew/1., par/umagtarnew/0.9,
-                par/umagtarnew/0.8], transpose = True, xrange = trange, ylog=iflog, xlog=True)
+                addcontour = [par/umagtarnew/1., par/umagtarnew/0.9, par/umagtarnew/0.8], \
+                transpose = True, xrange = trange, ylog=iflog, xlog=False)
         plots.somemap(rnew, tar*tscale, log10(betar), name=outdir+'/q2d_b',
                 inchsize = [4, 12], cbtitle = r'$\log_{10}\beta$', transpose = True, xrange = trange, xlog=iflog, ylog=True)
         # Q-:
@@ -1447,8 +1447,10 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
 
         plots.someplots(rnew, [rnew*0.+1., rnew*0., mdmean/mdot, (mdmean+mdstd)/mdot, (mdmean-mdstd)/mdot], formatsequence = [':k', '--k', '-k', '-g', '-g'], xlog = True, ylog = False, xtitle = r'$R/R_{\rm *}$', ytitle = r'$\langle s\rangle /\dot{M}$', inchsize = [3.35, 2.], name=outdir+'/q2d_mdmean')
  
-        plots.someplots(tar*tscale, [betaeff, betaeff_m, betavent], xtitle=r'$t$, s', ytitle=r'$\frac{u+P}{\rho}\frac{R_*}{GM_*}$', formatsequence=['k.', 'r-', 'b:'], ylog = False, xlog = False,
-            name=outdir+"/betaeff", yrange = [0., betaeff.max()*1.1])
+        plots.someplots(tar*tscale, [betaeff, betaeff_m, betavent],
+                        xtitle=r'$t$, s', ytitle=r'$\frac{u+P}{\rho}\frac{R_*}{GM_*}$',
+                        formatsequence=['k.', 'r-', 'b:'], ylog = False, xlog = False,
+                        name=outdir+"/betaeff", yrange = [0., betaeff.max()*1.1])
         print("mean effective betaBS = "+str(betaeff.mean()))
         print("using magnetic energy, betaBS = "+str(betaeff_m.mean()))
         print("gas-to-total pressure ratio at the surface is "+str(betar[tar>0.9*tar.max(),0].mean()))

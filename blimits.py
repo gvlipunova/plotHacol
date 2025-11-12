@@ -98,7 +98,7 @@ mu = (muar2/muar1)**(arange(nmu)/double(nmu-1))*muar1
 
 mdotar, muar = meshgrid(mdot, mu)
 
-karr = afac / drrat * RAlf(mdotar, muar) * xim / rstar / mdotar
+karr = afac / drrat * RAlf(mdotar, muar) * xim / mdotar
 
 beta_fint = copy(mdotar) * 0.
 beta_BS =  copy(mdotar) * 0.

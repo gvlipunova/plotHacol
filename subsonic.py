@@ -217,8 +217,8 @@ def fzero_solution(conf = 'SUBSO', snapshot = None, thsnapshots = None, iffit = 
     
     u = exp(u-umagrat)
     
-    print("experimental beta = ", 0.75 * fint[0] * sin(theta0)**2)
-    beta = 0.75 * fint[0] * sin(theta0)**2
+    print("experimental beta = ", 4./3. * fint[0] * sin(theta0)**2)
+    beta = 4./3. * fint[0] * sin(theta0)**2
     print("theta = ", theta)
     print("sin^-2(theta0) = ", 1./sin(theta0)**2)
     print("f = ", 0.75 /sin(theta0)**2 * beta + 0.75 * (1./sin(theta)**2-1./sin(theta0)**2))

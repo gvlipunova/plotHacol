@@ -1608,3 +1608,4 @@ if (parallelfactor != csize):
 
 alltire()
 
+print("Laskelma on p‰‰ttynyt onnellisesti!")

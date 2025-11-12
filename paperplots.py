@@ -2,6 +2,7 @@ import postpro
 import plots
 import os
 from numpy import *
+from scipy.interpolate import interp1d
 
 import configparser as cp
 conffile = 'globals.conf'
@@ -13,6 +14,8 @@ import bassun as bs
 modellist = ['fidu', 'fidu2', 'nd', 'bs', 'mdot1', 'mdot3', 'wide', 'wi', 'wi1', 'narrow', 'narrow2', 'rot', 'irr', 'RI', 'huge', 'mdot30', 'mdot100', 'mdot100w', 'mdot100w3', 'mdot100w5', 'mdot100w10', 'mdot100w20', 'mdot100w50']
 
 modellist = ['mdot100h_1'] # ,'mdot100w', 'mdot100w3', 'mdot100w5', 'mdot100w10', 'mdot100w20', 'mdot100w50']
+
+modellist = ['out_subso', 'out_bottom', 'out_zero']
 
 def titanfetch():
 
@@ -311,3 +314,58 @@ def voutshow():
     vDT = linesDT[:,2]
 
     plots.someplots([rT, rDT], [vT, vDT], name = 'vcomp/vcomp', formatsequence = ['k-', 'r:'], xtitle=r'$R/R_*$', ytitle=r'$v/c$', multix = True, xlog = True, legendsequence = ['T4', 'DT4'])
+
+
+def vplots():
+
+    nth = 300
+    
+    ms = [10., 20., 30., 40.,50.,70.,100.,120., 150., 200., 250., 300., 500.]
+
+    nms = size(ms)
+    dirs = [] ; confs = []
+    
+    for k in arange(nms):
+        confs.append('MARRAY{:03d}'.format(int(ms[k])))
+        ddir = config['MARRAY{:03d}'.format(int(ms[k]))].get('outdir')
+        dirs.append(ddir)
+
+    print(dirs)
+
+    formatsequence = ['k.', 'rx', 'gd', 'b*', 'mv']
+    
+    thlist = [] ; vlist = []
+
+    thgrid = arange(nth)/double(nth) * (1.4-0.3) + 0.3
+
+    vgrid = zeros([nth, nms])
+
+    thsurface = zeros(nms)   ; thshock = zeros(nms)   ; xshock = zeros(nms)
+    
+    for k in arange(nms):
+        postpro.acomparer(dirs[k]+'/tireout', nentry = [-300,-1], savetheta = True, conf = confs[k])
+        th, v = postpro.readtireout(dirs[k]+'/thprofile', ncol = 1)
+        x, q = postpro.readtireout(dirs[k]+'/avprofile', ncol = 1)
+        # ii = input(x.min())
+        v = q
+        thlist.append(th*180./pi) ; vlist.append(v)
+        vfun = interp1d(th, v, bounds_error = False)
+        vgrid[:,k] = vfun(thgrid)
+        thsurface[k] = th.min()
+        xs, bs = postpro.xis_conf(confs[k], x0 = 10.)
+        thfun = interp1d(x, th, bounds_error = False)
+        thshock[k] = thfun(xs)
+        xshock[k] = xs
+
+    legendsequence = list(map(lambda y: r'$\dot{m} = '+str(y)+'$', ms))
+    print(legendsequence)
+
+    yshifts = 0.05*arange(nms)
+
+    rstar = config['DEFAULT'].getfloat('rstar')
+    
+    plots.someplots(thlist, vlist, formatsequence = ['k-', 'r--', 'g-.', 'b:'] * 4, multix = True, name = 'vvcomp', yshifts =list(0.05*arange(nms)), inchsize = [5.,10.], xtitle=r'$\theta$, deg', ytitle=r'$v/c$', legendsequence = legendsequence, xlog = False)
+
+    plots.somemap(ms, thgrid, log10(-vgrid), name = 'vvmap', shading = 'nearest', cbtitle  = r'$\log_{10}v/c$', xlog = False, ylog = False,
+                  xtitle = r'$\dot{m}$', ytitle = r'$\theta$', addy = [thsurface, thshock], inchsize = [5.,12.])
+    

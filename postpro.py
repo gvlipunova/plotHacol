@@ -153,6 +153,45 @@ def galjaread(infile):
     
     return x, u, v, rho, prat
 
+def xis_conf(conf, x0 = 4.):
+    '''
+    takes a configuration file and calculates the analytic solution using bassun.py
+    '''
+
+    # can this be done without geo.dat?
+    rstar = config[conf].getfloat('rstar')
+    rstarg = rstar
+    m1 = config[conf].getfloat('m1')
+    mu30 = config[conf].getfloat('mu30')
+    mdot = config[conf].getfloat('mdot') * 4.*pi # TODO: should it be multiplied by mass1?
+    afac = config[conf].getfloat('afac')
+    xifac = config[conf].getfloat('xifac')
+    mass1 = config[conf].getfloat('m1')
+    tscale = config[conf].getfloat('tscale') * mass1
+    rhoscale = config[conf].getfloat('rhoscale') / mass1
+    realxirad = config[conf].getfloat('xirad')
+    mow = config[conf].getfloat('mow')
+    b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
+    umag = b12**2*2.29e6*m1 # on the pole, there is a correction to cth we do not take here into account (but neither do BS)
+    r_e = config[conf].getfloat('r_e_coeff') * (mu30**2/mdot)**(2./7.)*m1**(-10./7.) * xifac # magnetosphere radius
+    drrat = config[conf].getfloat('drrat')
+     
+    sth=sqrt(rstar/r_e) ; cth=sqrt(1.-rstar/r_e) 
+    delta0 = rstar * sth/sqrt(1.+3.*cth**2) * drrat 
+    # transverse thickness of the flow 
+    across0 = 2. * delta0 * 2. * pi * afac * rstar * sth # cross-section: first 2 from
+    
+    # umag is magnetic pressure
+    BSgamma = (across0/delta0**2)/mdot*rstar / (realxirad/1.5)
+    # b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units    
+    BSeta = (8./21./sqrt(2.)*umag*3. * (realxirad/1.5))**0.25*sqrt(delta0)/(rstar)**0.125
+    
+    print("BSgamma = "+str(BSgamma))
+    print("BSeta = "+str(BSeta))
+    xs, BSbeta = bs.xis(BSgamma, BSeta, x0=x0, ifbeta = True)
+
+    return xs, BSbeta
+
 def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = False, trange = None, savetheta = False):
     '''
     compares the structure of the flow to the analytic solution by B&S76
@@ -181,7 +220,11 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
             inhdf = infile + '.hdf5'
             sintry = size(nentry)
             if sintry <= 1:
-                entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff  = hdf.read(inhdf, nentry)
+                if nentry >= 0:
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff  = hdf.read(inhdf, nentry)
+                else:
+                    nens = hdf.keynums(inhdf) # nentry = -1 should represent the last snapshot
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff  = hdf.read(inhdf, nens[nentry])
                 betap = Fbeta(rhop, up, betacoeff)
                 dv = vp *0.
                 du = up *0.
@@ -189,7 +232,12 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
                 dbeta = betap*0.
                 dqloss = qloss * 0.
             else:
-                entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff = hdf.read(inhdf, nentry[0])
+                if nentry[0] >=0: # we know the numbers
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff = hdf.read(inhdf, nentry[0])
+                else:
+                    nens = hdf.keynums(inhdf)
+                    print(nens)
+                    entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff = hdf.read(inhdf, nens[0])
                 beta1 = Fbeta(rhop, up, betacoeff)
                 betap = copy(beta1)
                 nentries = 0 # nentry[1]-nentry[0]
@@ -199,7 +247,10 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
                 dbeta = copy(beta1)**2
                 dqloss = copy(qloss)**2
                 for k in arange(nentry[1]-nentry[0])+nentry[0]+1:
-                    entry1, t, l, xp, sth, rho1, up1, vp1, qloss1, glo1, ediff1  = hdf.read(inhdf, k)
+                    if nentry[0] >=0: # we know the numbers
+                        entry1, t, l, xp, sth, rho1, up1, vp1, qloss1, glo1, ediff1  = hdf.read(inhdf, k)
+                    else:
+                        entry1, t, l, xp, sth, rho1, up1, vp1, qloss1, glo1, ediff1 = hdf.read(inhdf, nens[k]) # we are counting from the back, say [-100,-1]
                     beta1 = Fbeta(rho1, up1, betacoeff)
                     t *= tscale
                     # print("t="+str(t))
@@ -288,13 +339,15 @@ def acomparer(infile, nentry =1000, ifhdf = True, conf = 'DEFAULT', nocalc = Fal
         fout = open(dirname + '/avprofile.dat', 'w')
         if savetheta:
             fth = open(dirname + '/thprofile.dat','w')
-            fth.write('# theta -- u/umag \n')
+            fth.write('# theta -- f -- u/umag -- df -- du/umag \n')
         fout.write("# R  -- v -- u -- Prat -- T -- rho -- qloss -- dv -- du -- dbeta -- dqloss \n")
         nx = size(xp)
         for k in arange(nx):
             s = str(xp[k]) + " " + str(vp[k]) + " " + str((up/umagtar)[k]) + " " + str(betap[k]) + " " + str(tempp[k]) + " " + str(rhop[k]) + " " + str(qloss[k]) + " " + str(dv[k])+ " "+str((du/umagtar)[k])+" "+str(dbeta[k])+" "+str(dqloss[k])+"\n"
             if savetheta:
-                fth.write(str(theta[k])+' '+ str((up/umagtar)[k]) + '\n')
+                f = (up/rhop)[k] * r.max() # normalized enthalpy
+                df = (du/up + drho/rhop)[k] * f
+                fth.write(str(theta[k])+' '+ str(f) +' '+str((up/umagtar)[k]) + ' '+ str(df) +' '+str((du/umagtar)[k]) +'\n')
             print(s)
             fout.write(s)
             fout.flush()
@@ -1216,7 +1269,7 @@ def quasi2d_nocalc(infile, conf = 'DEFAULT', trange = None):
         #  plots.somemap(r, t, log10(4.*pi *q*r**2/mdot), name=outdir+'/q2d_q', inchsize = [4, 12], cbtitle = r'$R^2 Q^- / L_{\rm Edd}$', xrange = trange, transpose=True) #, levels = 3.*arange(nv)/double(nv-2)-1.)
         plots.somemap(r, t, v, name=outdir+'/q2d_v', inchsize = [5, 10], cbtitle = r'$v/c$',  xrange = trange,transpose=True, levels = 0.125 * (arange(nv)/double(nv-1)-0.7))
         plots.somemap(r, t, lurel - log(3.), name=outdir+'/q2d_u', inchsize = [5, 10], cbtitle = r'$\log_{10} p/p_{\rm mag}$', xrange = trange, addcontour = [u/3./0.99, u/3./0.9, u/3./0.8],transpose=True)
-        plots.somemap(r, t, m, name=outdir+'/q2d_m', inchsize = [5, 10], cbtitle = r'$s / \dot{M}$', xrange = trange, transpose=True, levels = 3.*arange(nv)/double(nv-2)-1.)
+        plots.somemap(r, t, m, name=outdir+'/q2d_m', inchsize = [5, 10], cbtitle = r'$s / \dot{M}$', xrange = trange, transpose=True)
         teff = 4.75 * mass1**(-0.25) * (q/r**3)**0.25 # keV
         plots.somemap(r, t, q, name=outdir+'/q2d_q', inchsize = [5, 10], cbtitle = r'$Q R^3$', xrange = trange, transpose=True)
         plots.somemap(r, t, teff, name=outdir+'/q2d_teff', inchsize = [5, 10], cbtitle = r'$Teff$, keV', xrange = trange, transpose=True)
@@ -1373,8 +1426,8 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         print(lulev)
         plots.somemap(rnew, tar*tscale, lurel, name=outdir+'/q2d_u', levels = lulev, \
                 inchsize = [4, 12], cbtitle = r'$\log_{10}u/u_{\rm mag}$', \
-                addcontour = [par/umagtarnew/1., par/umagtarnew/0.9,
-                par/umagtarnew/0.8], transpose = True, xrange = trange, ylog=iflog, xlog=True)
+                addcontour = [par/umagtarnew/1., par/umagtarnew/0.9, par/umagtarnew/0.8], \
+                transpose = True, xrange = trange, ylog=iflog, xlog=False)
         plots.somemap(rnew, tar*tscale, log10(betar), name=outdir+'/q2d_b',
                 inchsize = [4, 12], cbtitle = r'$\log_{10}\beta$', transpose = True, xrange = trange, xlog=iflog, ylog=True)
         # Q-:
@@ -1383,7 +1436,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         plots.somemap(rnew, tar*tscale, log10(abs(ear)), name=outdir+'/q2d_qe', \
                 inchsize = [4, 12], cbtitle = r'$\log_{10}\left|F_{\rm diff}\right|$', transpose = True, xrange = trange, xlog = False, ylog=iflog)
         # mdot:
-        mdlev = 3.*arange(nv)/double(nv-2)-1.
+        mdlev = 1.5*arange(nv)/double(nv-2) # 3.*arange(nv)/double(nv-2)-1.
         plots.somemap(rnew, tar*tscale, mdar/mdot, name=outdir+'/q2d_m', \
                 inchsize = [4, 12], cbtitle = r'$s / \dot{M}$', levels = mdlev, \
                 transpose = True, xrange = trange, ylog=False, xlog=True) # , yrange=[1.,1.1], ylog = False)
@@ -1394,8 +1447,10 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
 
         plots.someplots(rnew, [rnew*0.+1., rnew*0., mdmean/mdot, (mdmean+mdstd)/mdot, (mdmean-mdstd)/mdot], formatsequence = [':k', '--k', '-k', '-g', '-g'], xlog = True, ylog = False, xtitle = r'$R/R_{\rm *}$', ytitle = r'$\langle s\rangle /\dot{M}$', inchsize = [3.35, 2.], name=outdir+'/q2d_mdmean')
  
-        plots.someplots(tar*tscale, [betaeff, betaeff_m, betavent], xtitle=r'$t$, s', ytitle=r'$\frac{u+P}{\rho}\frac{R_*}{GM_*}$', formatsequence=['k.', 'r-', 'b:'], ylog = False, xlog = False,
-            name=outdir+"/betaeff", yrange = [0., betaeff.max()*1.1])
+        plots.someplots(tar*tscale, [betaeff, betaeff_m, betavent],
+                        xtitle=r'$t$, s', ytitle=r'$\frac{u+P}{\rho}\frac{R_*}{GM_*}$',
+                        formatsequence=['k.', 'r-', 'b:'], ylog = False, xlog = False,
+                        name=outdir+"/betaeff", yrange = [0., betaeff.max()*1.1])
         print("mean effective betaBS = "+str(betaeff.mean()))
         print("using magnetic energy, betaBS = "+str(betaeff_m.mean()))
         print("gas-to-total pressure ratio at the surface is "+str(betar[tar>0.9*tar.max(),0].mean()))

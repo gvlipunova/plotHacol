@@ -72,6 +72,17 @@ def keyshow(filename):
     f.close()
     return keys
 
+def keynums(filename):
+    # 
+    keys =  keyshow(filename)
+    # https://stackoverflow.com/questions/2152898/filtering-a-list-of-strings-based-on-contents
+    entrylist = list(filter(lambda k: 'entry' in k, keys))
+    # now string parsing in the new list:
+    
+    numlist = list(map(lambda s: int(s[5:]), entrylist))
+
+    return numlist
+
 def read(hname, nentry, ifnu = False):
     '''
     read a single entry from an HDF5

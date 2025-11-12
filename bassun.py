@@ -2,8 +2,12 @@ import numpy.random
 from numpy.random import rand
 from numpy import *
 from scipy.optimize import fsolve
-from scipy.special import expn
+from scipy.special import expn, jv, yn
 from scipy.integrate import simpson
+
+'''
+Analytical tools from Basko & Sunyaev 1976 etc. Shock front, beta, pulsation period veod. 
+'''
 
 def fxis(x, gamma, eta, n):
     return 1.+exp(gamma*x)*(x*expn(2,gamma)-expn(2,gamma*x)) - eta * gamma**0.25 * x**((n+0.5)/4.)
@@ -19,8 +23,11 @@ def xis(gamma, eta, n=3, x0=20., ifbeta = False):
     '''
     if((eta*gamma**0.25)<1.) | (gamma>1000.):
         return nan
-    x = fsolve(fxis, x0, args=(gamma, eta, n), maxfev = 1000, xtol=1e-10)
-    #    print(fxis(x, gamma, eta, n))
+    x = fsolve(fxis, x0, args=(gamma, eta, n), maxfev = 10000, xtol=1e-10)
+    #print(x)
+    #print(fxis(x, gamma, eta, n))
+    if abs(fxis(x, gamma, eta, n)) > 1e-10:
+        x = sqrt(-1.)
     if ifbeta:
         beta = 1.-gamma*exp(gamma)*(expn(1,gamma)-expn(1, gamma*x))
         print("beta = ", beta)
@@ -68,4 +75,3 @@ def BSsolution(gamma, eta):
 
     return x, v, u
     
-

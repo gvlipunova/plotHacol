@@ -349,7 +349,7 @@ def diffuse(rho, urad, v, dl, across, taueff):
     # rtau_exp1 = 1./(3. * (rho)[1:] * dl/2.)
     # rtau_exp2 = 1./(3. * (rho)[:-1] * dl/2.)
 
-    duls_half =  -nubulk  * (( urad * v)[1:] - ( urad * v)[:-1])\
+    duls_half =  -nubulk  * (( urad * v)[1:] - ( urad * v)[:-1]) \
                  *(across[1:]+across[:-1]) / 2. * rtau_exp #  / (rtau_left + rtau_right)
     # -- photon bulk viscosity
     # dule_half = -((urad)[1:] - (urad)[:-1])\

@@ -181,7 +181,7 @@ c0 = ax.contour(muar, mdotar, beta_BS, [0.2, 0.3, 0.5, 0.75, 0.9, 0.99], colors 
 c06 = ax.contour(muar, mdotar, beta_BS, [2./3.], colors = 'k', linestyles=':', linewidths = 4.)
 
 csph = ax.contour(muar, mdotar, Rsph(mdotar)/(RAlf(mdotar, muar)*0.5), levels = [1], colors = 'r')
-csphs = ax.contour(muar, mdotar, Rsph(mdotar)/sqrt(RAlf(mdotar, muar)*0.5), levels = [1], colors = 'r', linestyles = 'dotted')
+# csphs = ax.contour(muar, mdotar, Rsph(mdotar)/sqrt(RAlf(mdotar, muar)*0.5), levels = [1], colors = 'r', linestyles = 'dotted')
 
 formatstring = ['0.5', '0.75', '0.9', '0.99']
 fmt = {}
@@ -195,12 +195,12 @@ cs1.set_facecolor('none')
 cs1.set_edgecolor('w')
 # bar.set_edgecolor('k')
 # cs2 = ax.contourf(muar, mdotar, betarad, [-10., 0., 1.], hatches=['\\', '', '||'], alpha = 1.0)
-cs2 = ax.contourf(muar, mdotar, fint, [-10., 0., 1., 1000.], hatches=['\\', '', '--', '||'], alpha = 1.0)
-cs2.set_facecolor('none')
-cs2.set_edgecolor('w')
+#cs2 = ax.contourf(muar, mdotar, fint, [-10., 0., 1., 1000.], hatches=['\\', '', '--', '||'], alpha = 1.0)
+#cs2.set_facecolor('none')
+#cs2.set_edgecolor('w')
 cs3 = ax.contour(muar, mdotar, log10(xis/(xim*RAlf(mdotar, muar)/rstar)), [0.], colors='w', linewidths=3, linestyles='dashed') #, hatches=['||', '', '--'], alpha = 1.0)
-# cs3.set_facecolor('none')
-# cs3.set_edgecolor('w')
+cs3.set_facecolor('none')
+cs3.set_edgecolor('w')
 cs4 = ax.contourf(muar, mdotar, RAlf(mdotar, muar)*0.5/rstar, [-1., 1.], colors='w', linewidths=3, hatches=['||', '', '--'], alpha = 1.0)
 cs4.set_facecolor('none')
 cs4.set_edgecolor('k')

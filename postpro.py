@@ -1219,7 +1219,7 @@ def energytest(infile, n1, n2, dn, conf = 'DEFAULT'):
 def masstest(indir, conf='DEFAULT'):
 
     mass1 = config[conf].getfloat('m1')
-    massscale = config[conf].getfloat('massscale') * mass1
+    massscale = config[conf].getfloat('massscale') * mass1**2
     mdot = config[conf].getfloat('mdot')
 
     massfile = indir + '/totals.dat'
@@ -1237,8 +1237,11 @@ def masstest(indir, conf='DEFAULT'):
     
     # plots.someplots((t[1:]+t[:-1])/2., [(mlost[1:]-mlost[:-1])/(t[1:]-t[:-1])], name='mdot', xtitle = r'$t$, s', ytitle = r'$\dot{M}$, g s$^{-1}$', xlog = False, ylog = False)
 
-    plots.someplots(t, [mdotcurrent/4./pi, macc*0.+mdot], name='mdot', xtitle = r'$t$, s', ytitle = r'$\dot{M}c^2/L_{\rm Edd}$', xlog = False, ylog = False, formatsequence=['k-','r:'])
+    #    plots.someplots(t, [mdotcurrent/4./pi, macc*0.+mdot], name='mdot', xtitle = r'$t$, s', ytitle = r'$\dot{M}c^2/L_{\rm Edd}$', xlog = False, ylog = False, formatsequence=['k-','r:'])
 
+    plots.someplots(t, [m, macc, mlost], formatsequence = ['k-', 'r:', 'b--', 'm-', 'c-'],
+                    xlog = False, ylog = False, xtitle = r'$t$, s', ytitle = r'$M$', name = 'mdot')
+    
 def quasi2d_nocalc(infile, conf = 'DEFAULT', trange = None):
     
     outdir = os.path.dirname(infile)

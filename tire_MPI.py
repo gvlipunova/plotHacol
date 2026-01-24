@@ -349,7 +349,7 @@ def diffuse(rho, urad, v, dl, across, taueff):
     # rtau_exp1 = 1./(3. * (rho)[1:] * dl/2.)
     # rtau_exp2 = 1./(3. * (rho)[:-1] * dl/2.)
 
-    duls_half =  -nubulk  * (( urad * v)[1:] - ( urad * v)[:-1])\
+    duls_half =  -nubulk  * (( urad * v)[1:] - ( urad * v)[:-1]) \
                  *(across[1:]+across[:-1]) / 2. * rtau_exp #  / (rtau_left + rtau_right)
     # -- photon bulk viscosity
     # dule_half = -((urad)[1:] - (urad)[:-1])\
@@ -578,7 +578,7 @@ def RKstep(gnd, lhalf, ahalf, prim, leftpack, rightpack, umagtar = None, ltot = 
                 dmsqueeze[2:]=0.
             else:
                 dmsqueeze *= 0.
-        dmloss = trapezoid(dmsqueeze, x= gnd.r[1:-1])
+        dmloss = trapezoid(dmsqueeze, x= gnd.l[1:-1])
     else:
         dmsqueeze = 0.
         desqueeze = 0.
@@ -1507,7 +1507,8 @@ def alltire():
         ftot=open(outdir+'/'+'totals.dat', 'w')
         if ifnuloss:
             fnu = open(outdir+'/'+'neuloss.dat', 'w')
-            fnu.write('# t, s  -- Lnu(A), Ledd/4pi\ -- Lnu(Ph), Ledd/4pi\ -- Lnu(Pl), Ledd/4pi\n')
+            fnu.write('# t, s  -- Lnu(A), Ledd/4pi -- Lnu(Ph), Ledd/4pi -- Lnu(Pl), Ledd/4pi\n')
+
         else:
             fnu = None
             
@@ -1608,4 +1609,3 @@ if (parallelfactor != csize):
 
 alltire()
 
-print("Laskelma on p‰‰ttynyt onnellisesti!")

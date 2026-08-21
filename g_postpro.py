@@ -38,13 +38,14 @@ conffile = 'globals.conf'
 config = cp.ConfigParser(inline_comment_prefixes="#")
 config.read(conffile)
 ifplot =  config['DEFAULT'].getboolean('ifplot') 
+ifplot=1  # to plot everything
 
 # @galja added: for separate ifplot option:
 conffile1 = 'plot.conf'
 configplot = cp.ConfigParser(inline_comment_prefixes="#")
 configplot.read(conffile1)
 ifplot = configplot['DEFAULT'].getboolean('ifplot')
-
+ifplot=True
 
 # Constants
 Consts = {

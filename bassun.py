@@ -50,6 +50,8 @@ def dtint(gamma, xs, cthfun, beta = None):
             beta = 1.-gamma*exp(gamma)*(expn(1,gamma)-expn(1, gamma*xs))
     
         csq = 1./3. * exp(gamma * x) * (expn(2,gamma*x)/x + beta * exp(-gamma) - expn(2,gamma)) # / x**3
+        if hasattr(cthfun, 'x') and x.max() > cthfun.x.max(): print("Warning in dtint: extrapolating geometry above x =", cthfun.x.max(), "up to x =", x.max())
+        if hasattr(cthfun, 'x') and x.max() > 1.01*cthfun.x.max(): raise ValueError("Requested shock radius is significantly beyond the geometry grid")
         cth = cthfun(x)
         #        print("mean cos = "+str(cth.mean()))
         w = where(csq>0.)

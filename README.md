@@ -1,5 +1,7 @@
 # HACol
 
+Code calculates 1-D time-dependent structure of the accretion flow onto a neutron star with dipole magnetic field. Equations apply to the regime when radiation shock is expected to form.
+
 ## Installation and Running
 
 <details>

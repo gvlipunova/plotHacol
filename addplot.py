@@ -54,7 +54,8 @@ def massrace(dirlist,confs):
         
         geo_r = geometry[:,0]  ; 
         th = geometry[:,1]
-        cthfun = interp1d(geo_r/geo_r[0], cos(th))
+        cthfun = interp1d(geo_r/geo_r[0], cos(th), bounds_error=False, fill_value=(cos(th[0]), cos(th[-1])))
+        #cthfun = interp1d(geo_r/geo_r[0], cos(th))
         # dt = bs.dtint(0.9649633038, 6., cthfun, beta = 0.417)
         # print ("dt_sound = ", tscale * rstar**1.5 * m1 * dt)
         dt = bs.dtint(0.9649633038, 6., cthfun)  # correct use
@@ -90,7 +91,8 @@ def massrace(dirlist,confs):
         
         geo_r = geometry[:,0]  ; 
         th = geometry[:,1]
-        cthfun = interp1d(geo_r/geo_r[0], cos(th))
+        #cthfun = interp1d(geo_r/geo_r[0], cos(th))
+        cthfun = interp1d(geo_r/geo_r[0], cos(th), bounds_error=False, fill_value=(cos(th[0]), cos(th[-1])))
             
         mcol = across0 * rstar**2 * umag / m1 * (1.+3.*cth0**2)/4.
         print("mcol = "+str(mcol*mscale)+" g")

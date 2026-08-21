@@ -48,14 +48,15 @@ def dtint(gamma, xs, cthfun, beta = None):
 
         if beta is None:
             beta = 1.-gamma*exp(gamma)*(expn(1,gamma)-expn(1, gamma*xs))
-    
-        csq = 1./3. * exp(gamma * x) * (expn(2,gamma*x)/x + beta * exp(-gamma) - expn(2,gamma)) # / x**3
-        if hasattr(cthfun, 'x') and x.max() > cthfun.x.max(): print("Warning in dtint: extrapolating geometry above x =", cthfun.x.max(), "up to x =", x.max())
-        if hasattr(cthfun, 'x') and x.max() > 1.01*cthfun.x.max(): raise ValueError("Requested shock radius is significantly beyond the geometry grid")
+
+        csq = 1./3. * exp(gamma*x) * (expn(2,gamma*x)/x + beta*exp(-gamma) - expn(2,gamma))
+
+        if hasattr(cthfun, 'x') and x.max() > cthfun.x.max(): print("Warning in dtint: using outermost geometry for x from", cthfun.x.max(), "to", x.max())
+
         cth = cthfun(x)
-        #        print("mean cos = "+str(cth.mean()))
-        w = where(csq>0.)
-        dt = simpson((sqrt((3.*cth**2+1.)/ csq)/cth)[w], x=x[w])/2.
+        w = where(csq > 0.)
+        dt = simpson((sqrt((3.*cth**2+1.)/csq)/cth)[w], x=x[w])/2.
+        
     else:
         dt = zeros(nxs)
         for k in arange(nxs):

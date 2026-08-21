@@ -41,3 +41,17 @@ export HDF5_USE_FILE_LOCKING=FALSE
 POSSIBLE PROBLEMS
 
 The code is designed in a way to make the results accessable as soon as possible. All the ASCII files and all the HDF5 entries are flushed as soon as the snapshot is written. You do not need to wait until the simulation ends to read and reduce the output entries (though there could be issues with simultaneous access). If you need to kill the code during the simulation, all the results would be saved. There may be problems with reading the HDF5 simultaneously with writing to it. One possible solution is setting HDF5_USE_FILE_LOCKING=FALSE before running the code. 
+
+PLOTTING FIGURES
+
+To generate plots from simulation results, use the plotting script by typing:
+> ploth [DIRNAME]
+
+where [DIRNAME] should match the MODELNAME specified in globals.conf. 
+
+The script will generate figures in both PDF and PNG formats, which will be saved in the specified DIRNAME folder. Additionally, three subdirectories will be created containing organized plots:
+- early/    - plots from early simulation times
+- late/     - plots from late simulation times  
+- radial_times/ - plots showing radial evolution at different times
+
+These plots help visualize the temporal and spatial evolution of the simulation results.

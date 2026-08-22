@@ -528,8 +528,8 @@ def plot_dynspec(t2,binfreq2, pds2, outfile='flux_dyns', nbin=None, omega=None, 
     nbin0=2
     
     if logscale:
-        lpds = full(shape(pds), nan, dtype=float)
-        positive = pds > 0.0
+        lpds = full(shape(pds2), nan, dtype=float)
+        positive = pds2 > 0.0
         lpds[positive] = log10(pds[positive])
     else:
         lpds = pds2

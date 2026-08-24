@@ -358,12 +358,15 @@ def acomparer(infile, nentry=1000, ifhdf=True, conf='DEFAULT', nocalc=False, tra
         else:
             sintry=0
             xp, qp = readtireout(infile, ncol = [3, 2, 1])
-            up, vp, rhop = qp
+
     else:
-        lines = loadtxt(os.path.dirname(infile) + '/avprofile.dat', comments = '#')
+        lines = loadtxt(os.path.dirname(infile) + '/avprofile.dat', comments='#')
         xp = lines[:,0] ; vp = lines[:,1] ; up = lines[:,2] ; betap = lines[:,3] ; tempp = lines[:,4] ; rhop = lines[:,5] ; qloss = lines[:,6]
         dv = lines[:,7] ; du = lines[:,8] ; dbeta = lines[:,9] ; dqloss = lines[:,10]
+        # since /avprofile.dat does not have drho data ->
+        drho = zeros_like(rhop, dtype=float)
         sintry = 0
+
         #  betap = pratp / (1.+pratp)
 
     geofile = os.path.dirname(infile)+"/geo.dat"

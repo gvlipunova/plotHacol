@@ -454,7 +454,12 @@ def acomparer(infile, nentry=1000, ifhdf=True, conf='DEFAULT', nocalc=False, tra
                     if y_values.size < 2:
                         print("Warning: no valid positive y values for logarithmic velocity plot")
                     else:
-                        plot_log_comparison(dirname, 'acompare_v', r_plot/rstar, -BSv_plot, r_plot/rstar, -vp_plot, dv_plot, extra_curves=[(r_plot/rstar, 1.0/sqrt(r_plot)), (r_plot/rstar, 1.0/sqrt(r_plot)/7.0)], formatsequence=['r--', 'k-', 'r:', 'r:', 'b:', 'b:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error', r'$r^{-1/2}$', r'$r^{-1/2}/7$'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$-v/c$', title=conf)
+                        # plot_log_comparison(dirname, 'acompare_v', r_plot/rstar, -BSv_plot, r_plot/rstar, -vp_plot, dv_plot, extra_curves=[(r_plot/rstar, 1.0/sqrt(r_plot)), (r_plot/rstar, 1.0/sqrt(r_plot)/7.0)], formatsequence=['r--', 'k-', 'r:', 'r:', 'b:', 'b:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error', r'$r^{-1/2}$', r'$r^{-1/2}/7$'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$-v/c$', title=conf)
+
+                        print("len(BSr_plot) =", len(BSr_plot), "len(BSv_plot) =", len(BSv_plot))
+                        print("len(r_plot) =", len(r_plot), "len(vp_plot) =", len(vp_plot), "len(dv_plot) =", len(dv_plot))
+
+                        plot_log_comparison(dirname, 'acompare_v', BSr_plot, -BSv_plot, r_plot/rstar, -vp_plot, dv_plot, extra_curves=[(r_plot/rstar, 1.0/sqrt(r_plot)), (r_plot/rstar, 1.0/sqrt(r_plot)/7.0)], formatsequence=['r--', 'k-', 'r:', 'r:', 'b:', 'b:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error', r'$r^{-1/2}$', r'$r^{-1/2}/7$'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$-v/c$', title=conf)
 
                         plot_log_comparison(dirname, 'acompare_u', BSr_u_plot, BSu_plot/3.0, r_u_plot/rstar, up_plot, du_plot, extra_curves=[(r_u_plot/rstar, up_plot*0.0+1.0)], formatsequence=['k-', 'r--', 'r:', 'r:', 'b:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error', '1'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$P/P_{\rm mag}$', title=conf)
 

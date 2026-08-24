@@ -461,10 +461,34 @@ def acomparer(infile, nentry=1000, ifhdf=True, conf='DEFAULT', nocalc=False, tra
 
                         plot_log_comparison(dirname, 'acompare_v', BSr_plot, -BSv_plot, r_plot/rstar, -vp_plot, dv_plot, extra_curves=[(r_plot/rstar, 1.0/sqrt(r_plot)), (r_plot/rstar, 1.0/sqrt(r_plot)/7.0)], formatsequence=['r--', 'k-', 'r:', 'r:', 'b:', 'b:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error', r'$r^{-1/2}$', r'$r^{-1/2}/7$'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$-v/c$', title=conf)
 
+
+                        valid_u_bs = isfinite(BSr) & isfinite(BSu) & (BSr > 0.0) & (BSu > 0.0)
+                        valid_u_sim = isfinite(r) & isfinite(up) & isfinite(du) & (r > 0.0) & (up > 0.0) & (up+du > 0.0) & (up-du > 0.0)
+                        BSr_u_plot = BSr[valid_u_bs]
+                        BSu_plot = BSu[valid_u_bs]
+                        r_u_plot = r[valid_u_sim]
+                        up_plot = up[valid_u_sim]
+                        du_plot = du[valid_u_sim]
+
                         plot_log_comparison(dirname, 'acompare_u', BSr_u_plot, BSu_plot/3.0, r_u_plot/rstar, up_plot, du_plot, extra_curves=[(r_u_plot/rstar, up_plot*0.0+1.0)], formatsequence=['k-', 'r--', 'r:', 'r:', 'b:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error', '1'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$P/P_{\rm mag}$', title=conf)
+
+                        valid_beta_bs = isfinite(BSr) & isfinite(betag) & (BSr > 0.0) & (betag > 0.0)
+                        valid_beta_sim = isfinite(r) & isfinite(betap) & isfinite(dbeta) & (r > 0.0) & (betap > 0.0) & (betap+dbeta > 0.0) & (betap-dbeta > 0.0)
+                        BSr_beta_plot = BSr[valid_beta_bs]
+                        betag_plot = betag[valid_beta_bs]
+                        r_beta_plot = r[valid_beta_sim]
+                        betap_plot = betap[valid_beta_sim]
+                        dbeta_plot = dbeta[valid_beta_sim]
 
                         plot_log_comparison(dirname, 'acompare_p', BSr_beta_plot, betag_plot, r_beta_plot/rstar, betap_plot, dbeta_plot, formatsequence=['k-', 'r--', 'r:', 'r:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$\beta$', title=conf)
 
+                        valid_rho_bs = isfinite(BSr) & isfinite(BSrho) & (BSr > 0.0) & (BSrho > 0.0)
+                        valid_rho_sim = isfinite(r) & isfinite(rhop) & isfinite(drho) & (r > 0.0) & (rhop > 0.0) & (rhop+drho > 0.0) & (rhop-drho > 0.0)
+                        BSr_rho_plot = BSr[valid_rho_bs]
+                        BSrho_plot = BSrho[valid_rho_bs]
+                        r_rho_plot = r[valid_rho_sim]
+                        rhop_plot = rhop[valid_rho_sim]
+                        drho_plot = drho[valid_rho_sim]
                         plot_log_comparison(dirname, 'acompare_rho', BSr_rho_plot, BSrho_plot, r_rho_plot/rstar, rhop_plot, drho_plot, formatsequence=['k-', 'r--', 'r:', 'r:'], legendsequence=['BS', 'simulation', 'simulation + error', 'simulation - error'], xtitle=r'$R/R_{\rm NS}$', ytitle=r'$\rho/\rho^*$', title=conf)
         else:
             plots.someplots([r/rstar, BSr, r/rstar, r/rstar], [-vp, -BSv, 1./sqrt(r), 1./sqrt(r)/7.], name=dirname+'/acompare_v', ylog=True, formatsequence=['r--', 'k-', 'b:', 'b:', 'r:', 'r:'], xtitle = r'$R/R_{\rm NS}$', ytitle =  r'$-v/c$', multix = True, yrange= [-BSv.max()/2., -BSv.min()*7.*2.], title=conf)

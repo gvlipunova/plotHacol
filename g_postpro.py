@@ -384,10 +384,10 @@ def acomparer(infile, nentry=1000, ifhdf=True, conf='DEFAULT', nocalc=False, tra
     
     BSeta = (8./21./sqrt(2.)*umag*3. * (realxirad/1.5))**0.25*sqrt(delta[0])/(rstar)**0.125
 
-    print("check BSeta 1 = "+str(BSeta))
-    BSeta = (8./21./sqrt(2.)*umagtar[0]*3. * (realxirad/1.5))**0.25*sqrt(delta[0])/(rstar)**0.125
-    print("check BSeta2 = "+str(BSeta))
-    xs, BSbeta = bs.xis(BSgamma, BSeta, x0=4., ifbeta = True)
+    # print("check BSeta 1 = "+str(BSeta))
+    # BSeta = (8./21./sqrt(2.)*umagtar[0]*3. * (realxirad/1.5))**0.25*sqrt(delta[0])/(rstar)**0.125
+    # print("check BSeta2 = "+str(BSeta))
+    # xs, BSbeta = bs.xis(BSgamma, BSeta, x0=4., ifbeta = True)
 
     BSr, BSv, BSu = bs.BSsolution(BSgamma, BSeta)
     print("finite BSr =", isfinite(BSr).sum(), "of", size(BSr))

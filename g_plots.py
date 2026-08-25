@@ -213,17 +213,16 @@ def somemap(x, y, q, name='map', xlog=True, ylog=False, xtitle=r'$R/R_*$', ytitl
     tick_params(labelsize=14, length=6, width=1., which='major', direction='in')
 
     if addcontour is not None:
-        ld = size(shape(addcontour)) # equal to 2 if there is a single contour
-        if ld == 2:
-            if transpose:
-                addcontour = addcontour.transpose()
-            contour(x, y, addcontour, levels=[1.], colors='k')
+        if isinstance(addcontour, (list, tuple)):
+            contour_list = addcontour
         else:
-            for kd in arange(ld):
-                if transpose:
-                    contour(x, y, addcontour[kd].transpose(), levels=[1.], colors='k')
-                else:
-                    contour(x, y, addcontour[kd], levels=[1.], colors='k')
+            contour_list = [addcontour]
+
+        for contour_data in contour_list:
+            contour_array = asarray(contour_data)
+            if transpose:
+                contour_array = contour_array.transpose()
+            contour(x, y, contour_array, levels=[1.], colors='k')
 
     if(xlog):
         xscale('log')

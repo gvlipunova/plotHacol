@@ -1,4 +1,4 @@
-SUBSO*
+SUBSO*/
 README.save
 *.png
 *.eps
@@ -29,3 +29,4 @@ begin.tex
 end.tex
 globals.conf
 *.txt
+log

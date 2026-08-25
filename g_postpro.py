@@ -2342,7 +2342,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
 
     # velocity
     if ifplot:
-        plots.somemap(rnew, tar*tscale_s, var, name=os.path.join(figuredir, 'q2d_v'+tag), levels=vlev, inchsize=[4, 12], cbtitle=r'$v/c$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, var, name=os.path.join(figuredir, 'q2d_v'+tag), levels=vlev, inchsize=[4, 12], cbtitle=r'$v/c$', transpose=True, xrange=trange, xi_range=xi_range, title=conf+": radial velocity normalized by speed of light")
 
         plots.someplots(rnew, [-sqrt(1./rstar/rnew), rnew*0., varmean, varmean+varstd, varmean-varstd], formatsequence=[':k', '--k', '-k', '-g', '-g'], xlog=True, ylog=False, xtitle=r'$R/R_{\rm *}$', ytitle=r'$\langle v\rangle /c$', inchsize=[3.35, 2.], name=os.path.join(figuredir, 'q2d_vmean'+tag), xi_range=xi_range, title=conf)
       
@@ -2371,15 +2371,15 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         
         # plots.somemap(rnew, tar*tscale_s, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1., par/umagtarnew/0.9, par/umagtarnew/0.8], transpose=True, xrange=trange, xi_range=xi_range, title=conf)
             
-        plots.somemap(rnew, tar*tscale_s, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1.0,], transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1.0,], transpose=True, xrange=trange, xi_range=xi_range, title=conf+": Pressure balance. Contour with P/Pmag=1")
         #in plot_bunch:
         
         # eliminate impact of zero beta:
         betar=betar+1e-12
-        plots.somemap(rnew, tar*tscale_s, log10(betar), name=os.path.join(figuredir, 'q2d_b'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}\beta$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, log10(betar), name=os.path.join(figuredir, 'q2d_b'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}\beta$', transpose=True, xrange=trange, xi_range=xi_range, title=conf+": Pgas/Ptotal")
 
         # Q-: in plot_bunch:
-        plots.somemap(rnew, tar*tscale_s, log10(qar), name=os.path.join(figuredir, 'flux'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}Q$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, log10(qar), name=os.path.join(figuredir, 'flux'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}Q$', transpose=True, xrange=trange, xi_range=xi_range, title=conf+": Radiation from column wall, internal units")
         
         ## temperature equivalent to  radiative flux along the tube
         #Teff_diff =   4.74501 * m1**(-0.25) * (abs(ear))**0.25 # keV    
@@ -2390,19 +2390,17 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         temperature_max = builtins.max(float(Teff_diff.max()), float(Teff.max()))
         templev = temperature_max * arange(nv) / float(nv - 2)
         
-        plots.somemap(rnew, tar*tscale_s, Teff, name=os.path.join(figuredir, 'q2d_Teff_surf'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,surf} ({\rm keV}) $', transpose=True, xrange=trange, xi_range=xi_range, levels=templev, title=conf)
+        plots.somemap(rnew, tar*tscale_s, Teff, name=os.path.join(figuredir, 'q2d_Teff_surf'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,surf} ({\rm keV}) $', transpose=True, xrange=trange, xi_range=xi_range, levels=templev, title=conf+": Effective temperature at wall")
 
         # not in plot_bunch:
         ear=ear+1e-12 # eliminate impact of zero ear
+
         
-        plots.somemap(rnew, tar*tscale_s, Teff, name=os.path.join(figuredir, 'q2d_Teff_surf'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,surf} ({\rm keV}) $', transpose=True, xrange=trange, xi_range=xi_range, levels=templev, title=conf)
-        
-        
-        plots.somemap(rnew, tar*tscale_s, Teff_diff, name=os.path.join(figuredir, 'q2d_Teff_along'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,along} ({\rm keV}) $', transpose=True, xrange=trange, ylog=False, xi_range=xi_range, levels=templev, title=conf)
+        plots.somemap(rnew, tar*tscale_s, Teff_diff, name=os.path.join(figuredir, 'q2d_Teff_along'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,along} ({\rm keV}) $', transpose=True, xrange=trange, ylog=False, xi_range=xi_range, levels=templev, title=conf+": radiative flux along the tube in terms of effective temperature")
 
         # mdot:not in plot_bunch: there,  alternative relative value is plotted
         mdlev = 3.*arange(nv)/double(nv-2)-1.
-        plots.somemap(rnew, tar*tscale_s, mdar/mdot, name=os.path.join(figuredir, 'q2d_m'+tag), inchsize=[4, 12], cbtitle=r'$s / \dot{M}$', levels=mdlev, transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, mdar/mdot, name=os.path.join(figuredir, 'q2d_m'+tag), inchsize=[4, 12], cbtitle=r'$s / \dot{M}$', levels=mdlev, transpose=True, xrange=trange, xi_range=xi_range, title=conf+": mass rate normalized to outer value")
 
         # mean mdar over time
         mdmean = mdar.mean(axis=0)  

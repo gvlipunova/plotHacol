@@ -2342,7 +2342,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
 
     # velocity
     if ifplot:
-        plots.somemap(rnew, tar*tscale_s, var, name=os.path.join(figuredir, 'q2d_v'+tag), levels=vlev, inchsize=[4, 12], cbtitle=r'$v/c$', transpose=True, xrange=trange, xi_range=xi_range, title=conf+": radial velocity normalized by speed of light")
+        plots.somemap(rnew, tar*tscale_s, var, name=os.path.join(figuredir, 'q2d_v'+tag), levels=vlev, inchsize=[4, 12], cbtitle=r'$v/c$', transpose=True, xrange=trange, xi_range=xi_range, title=conf+": Radial velocity normalized by speed of light")
 
         plots.someplots(rnew, [-sqrt(1./rstar/rnew), rnew*0., varmean, varmean+varstd, varmean-varstd], formatsequence=[':k', '--k', '-k', '-g', '-g'], xlog=True, ylog=False, xtitle=r'$R/R_{\rm *}$', ytitle=r'$\langle v\rangle /c$', inchsize=[3.35, 2.], name=os.path.join(figuredir, 'q2d_vmean'+tag), xi_range=xi_range, title=conf)
       
@@ -2396,11 +2396,11 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         ear=ear+1e-12 # eliminate impact of zero ear
 
         
-        plots.somemap(rnew, tar*tscale_s, Teff_diff, name=os.path.join(figuredir, 'q2d_Teff_along'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,along} ({\rm keV}) $', transpose=True, xrange=trange, ylog=False, xi_range=xi_range, levels=templev, title=conf+": radiative flux along the tube in terms of effective temperature")
+        plots.somemap(rnew, tar*tscale_s, Teff_diff, name=os.path.join(figuredir, 'q2d_Teff_along'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,along} ({\rm keV}) $', transpose=True, xrange=trange, ylog=False, xi_range=xi_range, levels=templev, title=conf+": Radiative flux along the tube in terms of effective temperature")
 
         # mdot:not in plot_bunch: there,  alternative relative value is plotted
         mdlev = 3.*arange(nv)/double(nv-2)-1.
-        plots.somemap(rnew, tar*tscale_s, mdar/mdot, name=os.path.join(figuredir, 'q2d_m'+tag), inchsize=[4, 12], cbtitle=r'$s / \dot{M}$', levels=mdlev, transpose=True, xrange=trange, xi_range=xi_range, title=conf+": mass rate normalized to outer value")
+        plots.somemap(rnew, tar*tscale_s, mdar/mdot, name=os.path.join(figuredir, 'q2d_m'+tag), inchsize=[4, 12], cbtitle=r'$s / \dot{M}$', levels=mdlev, transpose=True, xrange=trange, xi_range=xi_range, title=conf+": Radial mass rate normalized to outer value")
 
         # mean mdar over time
         mdmean = mdar.mean(axis=0)  

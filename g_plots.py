@@ -398,6 +398,23 @@ def someplots(x, ys, name='outplot', ylog = False, xlog = True, xtitle=r'$r$', y
         ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(2))
         ax.xaxis.set_minor_formatter(ticker.NullFormatter())
 
+    #####
+    if ylog:
+        ax.set_yscale('log')
+        ax.yaxis.set_major_locator(ticker.LogLocator(base=10.0, numticks=8))
+        ax.yaxis.set_minor_locator(ticker.LogLocator(base=10.0, subs='auto'))
+        ax.yaxis.set_minor_formatter(ticker.NullFormatter())
+    else:
+        ax.set_yscale('linear')
+
+        if y_min_ticks_step is not None:
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(y_min_ticks_step))
+        else:
+            ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=8))
+
+        ax.yaxis.set_minor_locator(ticker.AutoMinorLocator(2))
+        ax.yaxis.set_minor_formatter(ticker.NullFormatter())
+    ######
     if yrange is not None:
         ax.set_ylim(yrange[0], yrange[1])
 

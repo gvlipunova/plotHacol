@@ -2369,8 +2369,9 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         
         
         
-        plots.somemap(rnew, tar*tscale_s, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1., par/umagtarnew/0.9, par/umagtarnew/0.8], transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        # plots.somemap(rnew, tar*tscale_s, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1., par/umagtarnew/0.9, par/umagtarnew/0.8], transpose=True, xrange=trange, xi_range=xi_range, title=conf)
             
+        plots.somemap(rnew, tar*tscale_s, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1.], transpose=True, xrange=trange, xi_range=xi_range, title=conf)
         #in plot_bunch:
         
         # eliminate impact of zero beta:

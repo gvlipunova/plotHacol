@@ -54,7 +54,7 @@ def massrace(dirlist,confs):
         mscale_g = units.massscale_g(config, confs[k])
 
         b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
-        umag = g_units.umag_calc_polar (b12, m1)
+        umag = units.umag_calc_polar (b12, m1)
         ###
         geometry = loadtxt(dirlist[k]+"/geo.dat", comments="#", delimiter=" ", unpack=False)
         across0 = geometry[0,3] ; cth0 = cos(geometry[0,1])

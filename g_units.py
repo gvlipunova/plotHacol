@@ -23,11 +23,11 @@ def bs_travel_time_s(dt_dimensionless, rstar, config, conf='DEFAULT'):
 
 
 
-def masscale_raw(config, conf='DEFAULT'):
-    return config[conf].getfloat('masscale')
+def massscale_raw(config, conf='DEFAULT'):
+    return config[conf].getfloat('massscale')
 
-def masscale_g(config, conf='DEFAULT'):
-    return masscale_raw(config, conf) * model_m1(config, conf) * model_m1(config, conf)
+def massscale_g(config, conf='DEFAULT'):
+    return massscale_raw(config, conf) * model_m1(config, conf) * model_m1(config, conf)
 
 
 

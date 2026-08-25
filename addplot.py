@@ -51,7 +51,7 @@ def massrace(dirlist,confs):
         tscale_s = units.tscale_s(config, confs[k])
 
 
-        mscale_g = units.masscale_g(config, confs[k])
+        mscale_g = units.massscale_g(config, confs[k])
 
         b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
         umag = postpro.umag_calc_polar (b12, m1)

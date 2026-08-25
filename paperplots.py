@@ -243,7 +243,7 @@ def massrace():
         tscale_s = units.tscale_s(config, conf)
 
         # mscale = config[confs[k]].getfloat('massscale') * m1**2
-        mscale_g = units.masscale_g(config, conf)
+        mscale_g = units.massscale_g(config, conf)
 
         b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
         umag = b12**2*2.29e6*m1

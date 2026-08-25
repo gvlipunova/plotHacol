@@ -115,7 +115,7 @@ def massrace(dirlist,confs):
         print("tscale_s (s) =",tscale_s,"\n\n")
 
         tr  =  units.tr_phys (config, conf=confs[k])
-        print (conf+" Local correct replenishment time tr (s) = ",)
+        save2summary(dirlist[k], " Local correct replenishment time tr (s) = ", tr)
 
         
         tlist.append(t/tr) ; 

@@ -8,6 +8,7 @@ import os
 from numpy import *
 import configparser as cp
 import sys   # to direct stdout to a file  @galja
+import g_units as units
 
 conffile = 'globals.conf'
 config = cp.ConfigParser(inline_comment_prefixes="#")
@@ -44,8 +45,14 @@ def massrace(dirlist,confs):
         mdot = config[confs[k]].getfloat('mdot') * 4.*pi
         afac = config[confs[k]].getfloat('afac')
         
-        tscale = config[confs[k]].getfloat('tscale') * m1
-        mscale = config[confs[k]].getfloat('massscale') * m1**2
+        # tscale = config[confs[k]].getfloat('tscale') * m1 # s
+        # mscale = config[confs[k]].getfloat('massscale') * m1**2
+
+        tscale_s = units.tscale_s(config, confs[k])
+
+
+        mscale_g = units.masscale_g(config, confs[k])
+
         b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
         umag = postpro.umag_calc_polar (b12, m1)
         ###
@@ -59,7 +66,7 @@ def massrace(dirlist,confs):
         # dt = bs.dtint(0.9649633038, 6., cthfun, beta = 0.417)
         # print ("dt_sound = ", tscale * rstar**1.5 * m1 * dt)
         dt = bs.dtint(0.9649633038, 6., cthfun)  # correct use
-        print ("in massrace():\n dt_sound = tscale * rstar**1.5 * m1 * dt = ", tscale * rstar**1.5 * m1 * dt)
+        print ("in massrace():\n dt_sound = tscale_s * rstar**1.5 * m1 * dt = ", tscale_s * rstar**1.5 * m1 * dt)
         
         ####
         
@@ -95,17 +102,20 @@ def massrace(dirlist,confs):
         cthfun = interp1d(geo_r/geo_r[0], cos(th), bounds_error=False, fill_value=(cos(th[0]), cos(th[-1])))
             
         mcol = across0 * rstar**2 * umag / m1 * (1.+3.*cth0**2)/4.
-        print("mcol = "+str(mcol*mscale)+" g")
+        print("mcol = "+str(mcol*mscale_g)+" g")
         
-        tr = mcol / mdot * tscale 
+        tr = mcol / mdot * tscale_s
         
-        save2summary(dirlist[k], " (1) t_replenishment (s) = mcol / mdot * tscale = ", tr)
+        save2summary(dirlist[k], " (1) Approximate t_replenishment (s) = mcol / mdot * tscale_s = ", tr)
         
-        tr1 = 4. * afac / sqrt(2.) / xifac**3.5 * r_e**1.5 * (dr_e/rstar)   * tscale
+        tr1 = 4. * afac / sqrt(2.) / xifac**3.5 * r_e**1.5 * (dr_e/rstar)   * tscale_s
 
-        save2summary(dirlist[k], " (2) t_replenishment (s) =   4. * afac / sqrt(2.) / xifac**3.5 * r_e**1.5 * (dr_e/rstar)   * tscale = ", tr1)
+        save2summary(dirlist[k], " (2) Approximate t_replenishment (s) =   4. * afac / sqrt(2.) / xifac**3.5 * r_e**1.5 * (dr_e/rstar)   * tscale_s = ", tr1)
         
-        print("tscale=",tscale,"\n\n")
+        print("tscale_s (s) =",tscale_s,"\n\n")
+
+        tr  =  units.tr_phys (config, conf=conf)
+        print (conf+" Local correct replenishment time tr (s) = ",)
 
         
         tlist.append(t/tr) ; 

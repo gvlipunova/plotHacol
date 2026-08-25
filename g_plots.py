@@ -661,8 +661,8 @@ def rhocurvestack(n1, n2, step, prefix = "out/tireout", postfix = ".dat", conf =
     plots a series of U/Umag curves from the ascii output
     '''
 
-    tscale = 4.92594e-06 *1.4 # temporary! need to read it!
-    
+    #tscale = 4.92594e-06 *1.4 # temporary! need to read it!
+    tscale_s = units.tscale_s(config, conf)
     rho0 = [] ; rho1 = [] ; vl1 = [] ; vl0 = []
     
     for k in arange(n1,n2,step):
@@ -686,7 +686,7 @@ def rhocurvestack(n1, n2, step, prefix = "out/tireout", postfix = ".dat", conf =
     t = fluxlines[:,0] ; f = fluxlines[:,1]
     t =t[arange(0,n2-n1,step)]
 
-    rho_acc = cumtrapz((v1*rho1+v0*rho0)/2., x=t/tscale, initial = rho0[0])
+    rho_acc = cumtrapz((v1*rho1+v0*rho0)/2., x=t/tscale_s, initial = rho0[0])
     
     someplots(t, [rho0, rho1, rho_acc], name = "rho0", xtitle=r'$t$, s', ytitle=r'$\rho_0$', xlog=False, ylog=True, formatsequence = ['k-', 'r:', 'b--'])
 
@@ -696,9 +696,8 @@ def Vcurvestack(n1, n2, step, prefix = "out/tireout", postfix = ".dat", plot2d=F
     '''
     rstar = config[conf].getfloat('rstar')
     mdot = config[conf].getfloat('mdot')
-    tscale = config[conf].getfloat('tscale')
     m1 = config[conf].getfloat('m1')
-    tscale *= m1
+    #tscale_s = units.tscale_s(config, conf)
 
     outdir = os.path.dirname(prefix)
     geofile = outdir+"/geo.dat"

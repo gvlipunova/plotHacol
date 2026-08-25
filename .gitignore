@@ -27,3 +27,4 @@ shocktestm.*
 *.pyc
 begin.tex
 end.tex
+globals.conf

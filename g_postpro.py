@@ -15,6 +15,7 @@ import g_plots as plots
 import builtins
 import sys
 import configparser as cp
+import g_units as units
 
 from scipy import __version__ as scipy_version
 
@@ -70,14 +71,7 @@ if ifplot:
     ioff()
 
 
-def umag_calc_polar (b12, m1) :
-    # magnetic pressure B2/8/pi at the NS surface   (BS condition: Pmag = Uradiation/3)
-    return (b12**2*2.29e6*m1)
 
-def umag_calc_polar_phys (b12) :
-    # magnetic pressure B2/8/pi at the NS surface is SGC units, b12 = B(Gauss)/1e12
-    Pi = 3.14159265358979323846
-    return (b12**2 * 1e24 / 8. / Pi)
     
 def readtireout(infile, ncol = 0):
     '''
@@ -211,13 +205,14 @@ def acomparer(infile, nentry=1000, ifhdf=True, conf='DEFAULT', nocalc=False, tra
     afac = config[conf].getfloat('afac')
 
     mass1 = config[conf].getfloat('m1')
-    tscale = config[conf].getfloat('tscale') * mass1
+    #tscale = config[conf].getfloat('tscale') * mass1
+    tscale_s = units.tscale_s(config, conf)
     rhoscale = config[conf].getfloat('rhoscale') / mass1
     realxirad = config[conf].getfloat('xirad')
     mow = config[conf].getfloat('mow')
 
     b12 = 2. * mu30 * (rstar * m1 / 6.8)**(-3)
-    umag = umag_calc_polar(b12, m1)
+    umag = units.umag_calc_polar(b12, m1)
 
     betacoeff = config[conf].getfloat('betacoeff') * m1**(-0.25) / mow
 
@@ -235,7 +230,7 @@ def acomparer(infile, nentry=1000, ifhdf=True, conf='DEFAULT', nocalc=False, tra
 
                 entry, t, l, xp, sth, rhop, up, vp, qloss, glo, ediff = hdf.read(inhdf, nentry)
 
-                t = t * tscale
+                t = t * tscale_s
                 betap = Fbeta(rhop, up, betacoeff)
 
                 dv = zeros_like(vp, dtype=float)
@@ -288,7 +283,7 @@ def acomparer(infile, nentry=1000, ifhdf=True, conf='DEFAULT', nocalc=False, tra
 
                     entry, t1, l, xp, sth, rho1, up1, vp1, qloss1, glo, ediff = hdf.read(inhdf, entry_number)
 
-                    t1 = t1 * tscale
+                    t1 = t1 * tscale_s
 
                     if trange is not None and not (trange[0] <= t1 <= trange[1]):
                         continue
@@ -571,12 +566,13 @@ def comparer(ingalja, inpasha, nentry = 1000, ifhdf = True, conf = 'DEFAULT', vo
     mdot = config[conf].getfloat('mdot') * 4.*pi
     afac = config[conf].getfloat('afac')
     mass1 = config[conf].getfloat('m1')
-    tscale = config[conf].getfloat('tscale') * mass1
+    #tscale = config[conf].getfloat('tscale') * mass1
+    tscale_s = units.tscale_s(config, conf)
     rhoscale = config[conf].getfloat('rhoscale') / mass1
     realxirad = config[conf].getfloat('xirad')
     mow = config[conf].getfloat('mow')
     b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
-    umag = umag_calc_polar(b12,m1)
+    umag = units.umag_calc_polar(b12,m1)
     betacoeff = config[conf].getfloat('betacoeff') * (m1)**(-0.25)/mow
 
     if not nocalc:
@@ -603,7 +599,7 @@ def comparer(ingalja, inpasha, nentry = 1000, ifhdf = True, conf = 'DEFAULT', vo
                 vp /= double(nentries)
                 qloss /= double(nentries)
                 dv = sqrt(dv/double(nentries) - vp**2)
-                print("time range = "+str(tstart*tscale)+".."+str(tend*tscale)+"s")
+                print("time range = "+str(tstart*tscale_s)+".."+str(tend*tscale_s)+"s")
         else:
             sintry=0
             xp, qp = readtireout(inpasha, ncol = [3, 2, 1])
@@ -745,7 +741,8 @@ def dynspec(infile='out/flux', ntimes=10, nbins=100, binlogscale=False, deline =
     print("\n In dynspec():")
     rstar = config[conf].getfloat('rstar')
     m1 = config[conf].getfloat('m1')
-    tscale = config[conf].getfloat('tscale') * m1
+    #tscale = config[conf].getfloat('tscale') * m1
+    tscale_s = units.tscale_s(config, conf)
     mdot = config[conf].getfloat('mdot') * 4.*pi
     mu30 = config[conf].getfloat('mu30')
     realxirad = config[conf].getfloat('xirad')
@@ -959,7 +956,7 @@ def dynspec(infile='out/flux', ntimes=10, nbins=100, binlogscale=False, deline =
             BSgamma = (across0/delta0**2)/mdot*rstar / (realxirad/1.5)
             # umag is magnetic pressure
             b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
-            umag = umag_calc_polar(b12,m1)
+            umag = units.umag_calc_polar(b12,m1)
             BSeta = (8./21./sqrt(2.)*umag*3. * (realxirad/1.5))**0.25*sqrt(delta0)/(rstar)**0.125
             print("BSgamma = "+str(BSgamma))
             print("BSeta = "+str(BSeta))
@@ -976,7 +973,7 @@ def dynspec(infile='out/flux', ntimes=10, nbins=100, binlogscale=False, deline =
                 fth = array([])
             else:
                 xtmp = xmean[valid_x]
-                tth_valid = tscale * rstar**1.5 * m1 * bs.dtint(BSgamma, xtmp, cthfun)
+                tth_valid = tscale_s * rstar**1.5 * m1 * bs.dtint(BSgamma, xtmp, cthfun)
                 tth = full(size(xmean), nan, dtype=double)
                 tth[valid_x] = tth_valid
                 fth = full(size(xmean), nan, dtype=double)
@@ -1182,7 +1179,8 @@ def multishock(n1, n2, dn, prefix = "out/tireout", dat = False, conf = None, kle
         conf = 'DEFAULT'
     rstar = config[conf].getfloat('rstar')
     m1 = config[conf].getfloat('m1')
-    tscale = config[conf].getfloat('tscale') * m1
+    #tscale = config[conf].getfloat('tscale') * m1
+    tscale_s = units.tscale_s(config, conf)
     mu30 = config[conf].getfloat('mu30')
     mdot = config[conf].getfloat('mdot') * 4.*pi
     afac = config[conf].getfloat('afac')
@@ -1258,7 +1256,8 @@ def multishock(n1, n2, dn, prefix = "out/tireout", dat = False, conf = None, kle
     
     
     BSgamma = (across0/delta0**2)/mdot*rstar / (realxirad/1.5)
-    umag = umag_calc_polar (b12, m1) * (1.+3.*(cos(th[0]))**2)/4.
+    umag = units.umag_calc_local (b12, m1, th[0])
+
     
     acrossfun = interp1d(r/rstar, cross_section, bounds_error=False)
         
@@ -1384,9 +1383,9 @@ def multishock(n1, n2, dn, prefix = "out/tireout", dat = False, conf = None, kle
     print("multishock(): flux array lc_tot size is "+str(size(lc_tot)))
     ff /= 4.*pi  ; eqlum /= 4.*pi ; lc_tot /= 4.*pi ; lc_part /= 4.*pi  ; lc_in/=4.*pi; lc_out /= 4.*pi ; lc_nearshock /= 4.*pi
     l_shock_along /= 4.*pi
-    t *= tscale
+    t *= tscale_s
 
-    dt_current = tscale * rstar**1.5 * m1 * bs.dtint(BSgamma, s, cthfun)
+    dt_current = tscale_s * rstar**1.5 * m1 * bs.dtint(BSgamma, s, cthfun)
     
     
     if(ifplot):
@@ -1424,7 +1423,7 @@ def multishock(n1, n2, dn, prefix = "out/tireout", dat = False, conf = None, kle
 
             plots.someplots(t[ws], [-v1[ws], -v2[ws], sqrt(2./s[ws]/rstar), sqrt(2./s[ws]/rstar)/7.], name=outdir+"/vleap", xtitle=r'$t$, s', ytitle=r'$v/c$', xlog=False, formatsequence=['k-', 'b:', 'r-', 'r-'], title=conf)
 
-            plots.someplots(s[ws], [1./dt_current[ws], 1./(tscale*rstar**1.5*s[ws]**3.5)], xtitle=r'$R_{\rm shock}/R_*$', xlog=True, ylog=True, formatsequence=['ro', 'k-'], name=outdir+"/ux", ytitle=r'$f$, Hz', title=conf)
+            plots.someplots(s[ws], [1./dt_current[ws], 1./(tscale_s*rstar**1.5*s[ws]**3.5)], xtitle=r'$R_{\rm shock}/R_*$', xlog=True, ylog=True, formatsequence=['ro', 'k-'], name=outdir+"/ux", ytitle=r'$f$, Hz', title=conf)
         elif ifplot:
             print("Not enough valid points for plotting.")
 
@@ -1483,7 +1482,8 @@ def boundary_evolution ( prefix = "out/tireout", dat = False, conf = None,  xest
         conf = 'DEFAULT'
     rstar = config[conf].getfloat('rstar')
     m1 = config[conf].getfloat('m1')
-    tscale = config[conf].getfloat('tscale') * m1
+    #tscale = config[conf].getfloat('tscale') * m1
+    #new: tscale_s = units.tscale_s(config, conf)
     mu30 = config[conf].getfloat('mu30')
     mdot = config[conf].getfloat('mdot') * 4.*pi
     afac = config[conf].getfloat('afac')
@@ -1514,7 +1514,7 @@ def boundary_evolution ( prefix = "out/tireout", dat = False, conf = None,  xest
     
     
     BSgamma = (across0/delta0**2)/mdot*rstar / (realxirad/1.5)
-    umag = umag_calc_polar (b12, m1) * (1.+3.*(cos(th[0]))**2)/4.
+    umag = units.umag_calc_polar (b12, m1) * (1.+3.*(cos(th[0]))**2)/4.
     
     
     acrossfun = interp1d(r/rstar, cross_section, bounds_error=False)
@@ -1621,7 +1621,7 @@ def taus(n, prefix = 'out/tireout', ifhdf = True, conf = 'DEFAULT'):
         
         urad_phys = u *  uscale
         #we need to make  Urad/Umag  from u :
-        umagtar =  umag_calc_polar_phys(b12) * (1.+3.*cos(theta)**2)/4. * r**(-6.)   
+        umagtar =  units.umag_calc_polar_phys(b12) * (1.+3.*cos(theta)**2)/4. * r**(-6.)
         urad_umag = urad_phys/umagtar
         
        
@@ -1636,7 +1636,7 @@ def taus(n, prefix = 'out/tireout', ifhdf = True, conf = 'DEFAULT'):
         
         # r is normalized to Rstar
         # magnetic field energy density erg/cm3]:
-        umagtar =  umag_calc_polar_phys(b12) * (1.+3.*cos(theta)**2)/4. * r**(-6.)    
+        umagtar =  units.umag_calc_polar_phys(b12) * (1.+3.*cos(theta)**2)/4. * r**(-6.)
         # energy density [erg/cm3]:
         urad_phys = u  * umagtar
           
@@ -1741,7 +1741,8 @@ def filteredflux(hfile, n1, n2, rfraction = 0.9, conf = 'DEFAULT'):
     r, theta, alpha, across, l, delta = geo.gread(geofile)
     wr = r < (r.max()*rfraction)
 
-    tscale = config[conf].getfloat('tscale') * config[conf].getfloat('m1')
+    #tscale = config[conf].getfloat('tscale') * config[conf].getfloat('m1')
+    tscale_s = units.tscale_s(config, conf)
 
     lint = zeros(n2-n1)
     ltot = zeros(n2-n1)
@@ -1754,7 +1755,7 @@ def filteredflux(hfile, n1, n2, rfraction = 0.9, conf = 'DEFAULT'):
         ltot[k] = simps(qloss, x=l)
         tar[k] = t
     ltot /= 4.*pi ; lint /= 4.*pi # convert to Eddington units
-    tar *= tscale
+    tar *= tscale_s
     if(ifplot):
         # overplotting with the total flux
         plots.someplots(tar, [lint, ltot, ltot-lint, lint*0.+mdot*0.2], xlog=False, formatsequence = ['k-', 'g--', 'b--', 'r-'], xtitle='t, s', ytitle=r'$L/L_{\rm Edd}$', name= os.path.dirname(hfile)+'/cutflux', title=conf)
@@ -1792,7 +1793,7 @@ def lplot():
         afac = config[confs[k]].getfloat('afac')
         realxirad = config[confs[k]].getfloat('xirad')
         b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
-        umag = umag_calc_polar (b12, m1)
+        umag = units.umag_calc_polar (b12, m1)
         geometry = loadtxt(prefices[k]+"/geo.dat", comments="#", delimiter=" ", unpack=False)
         across0 = geometry[0,3]  ;   delta0 = geometry[0,5]
         BSgamma = (across0/delta0**2)/mdot*rstar / (realxirad/1.5)
@@ -1844,8 +1845,9 @@ def energytest(infile, n1, n2, dn, conf = 'DEFAULT'):
     llost = cumnumerical_trapezoid(ltot, x=tar, initial = 0.)
         
     m1 = config[conf].getfloat('m1')
-    tscale = config[conf].getfloat('tscale') * m1
-    tar *= tscale
+    #tscale = config[conf].getfloat('tscale') * m1
+    tscale_s = units.tscale_s(config, conf)
+    tar *= tscale_s
     plots.someplots(tar, [etot, ekin, epot, eheat, etot+llost], 
                     name = os.path.dirname(infile)+'/energytest',
                     formatsequence = ['k-', 'b--', 'r:', 'g-.', 'm--'],
@@ -1855,8 +1857,8 @@ def energytest(infile, n1, n2, dn, conf = 'DEFAULT'):
                     formatsequence = ['k-', 'b--', 'r:', 'g-.', 'm--'],
                     xtitle = r'$M$', ytitle = r'$E$', title=conf)
 
-    dedt = (etot[1:]-etot[:-1])/(tar[1:]-tar[:-1]) * tscale
-    dedt_p = (epot[1:]-epot[:-1])/(tar[1:]-tar[:-1]) * tscale
+    dedt = (etot[1:]-etot[:-1])/(tar[1:]-tar[:-1]) * tscale_s
+    dedt_p = (epot[1:]-epot[:-1])/(tar[1:]-tar[:-1]) * tscale_s
 
     plots.someplots(tar[1:], [-dedt, ltot[1:], dedt_p, dedt_p+ltot[1:]-dedt], formatsequence = ['k-', 'b--', 'k:', 'r:'], 
                     name = os.path.dirname(infile)+'/energytest_d', xlog = False, 
@@ -2149,7 +2151,8 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
     umag = glo['umag']
     
     m1 = config[conf].getfloat('m1')
-    tscale = config[conf].getfloat('tscale') * m1
+    #tscale = config[conf].getfloat('tscale') * m1
+    tscale_s = units.tscale_s(config, conf)
     rscale = config[conf].getfloat('rscale') * m1
     massscale = config[conf].getfloat('massscale') * m1**2
     rstar = config[conf].getfloat('rstar')
@@ -2162,16 +2165,16 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
     b12 = 2.*mu30*(rstar*m1/6.8)**(-3) # dipolar magnetic field on the pole, 1e12Gs units
     
     
-    umag1 = umag_calc_polar (b12, m1)
+    umag1 = units.umag_calc_polar (b12, m1)
     print("mdot = "+str(mdot))
     # ii = input("M")
     print("Check Umag polar = "+str(umag)+" = "+str(umag1)+"\n")
     betacoeff = config[conf].getfloat('betacoeff') * (m1)**(-0.25)/mow
     
     mcol = across[0] * rstar**2 * umag / m1 * (1.+3.*cth[0]**2)/4.
-    tr = mcol / mdot * tscale
-    print("Replenishment time tr (s) = "+str(tr))
-    print ("tscale = ",tscale)
+    #tr = mcol / mdot * tscale_s
+    #print("Approximate replenishment time tr (s) = "+str(tr))
+    print ("tscale_s = ",tscale_s)
     
     # ii =input('tr')
     
@@ -2234,7 +2237,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
             if entryname_test == -1:
                 continue
 
-            t_test_physical = t_test * tscale
+            t_test_physical = t_test * tscale_s
 
             if trange[0] <= t_test_physical <= trange[1]:
                 selected_entries.append(entry)
@@ -2308,7 +2311,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
             if (rvent[k] >= 1.) & (maxprat[k] >= 1.) & (verbatim_vent):
                 print("rvent = "+str(rvent[k])+" = "+str(r[wvent]))
                 print("drvent = "+str(drvent[k]))
-                print("t = "+str(t*tscale))
+                print("t (s) = "+str(t*tscale_s))
                 # ii = input('R')
             #            print("maxprat = "+str(maxprat[k]))
         # effective BS's beta:
@@ -2339,20 +2342,20 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
 
     # velocity
     if ifplot:
-        plots.somemap(rnew, tar*tscale, var, name=os.path.join(figuredir, 'q2d_v'+tag), levels=vlev, inchsize=[4, 12], cbtitle=r'$v/c$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, var, name=os.path.join(figuredir, 'q2d_v'+tag), levels=vlev, inchsize=[4, 12], cbtitle=r'$v/c$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
 
         plots.someplots(rnew, [-sqrt(1./rstar/rnew), rnew*0., varmean, varmean+varstd, varmean-varstd], formatsequence=[':k', '--k', '-k', '-g', '-g'], xlog=True, ylog=False, xtitle=r'$R/R_{\rm *}$', ytitle=r'$\langle v\rangle /c$', inchsize=[3.35, 2.], name=os.path.join(figuredir, 'q2d_vmean'+tag), xi_range=xi_range, title=conf)
       
         
-        umag = umag_calc_polar (b12, m1)
+        umag = units.umag_calc_polar (b12, m1)
         BSgamma = (across/delta**2)[0]/mdot*rstar / (realxirad/1.5)
         # umag is magnetic pressure
         BSeta = (8./21./sqrt(2.)*umag*3. * (realxirad/1.5))**0.25*sqrt(delta[0])/(rstar)**0.125
         xs, BSbeta = bs.xis(BSgamma, BSeta,  ifbeta = True)
         
-        plots.someplots(tar*tscale, [rvent, rshock, rvent*0+r[-1], rvent*0+xs], name=os.path.join(figuredir, 'rvent'+tag), xtitle=r'$t$, s', ytitle=r'$R_{\rm vent}/R_*$', xi_range=xi_range, formatsequence=['-k', '--k', '-b', '-g'], legendsequence=['vent', 'shock', 'max r', 'BS shock'], title=conf)
+        plots.someplots(tar*tscale_s, [rvent, rshock, rvent*0+r[-1], rvent*0+xs], name=os.path.join(figuredir, 'rvent'+tag), xtitle=r'$t$, s', ytitle=r'$R_{\rm vent}/R_*$', xi_range=xi_range, formatsequence=['-k', '--k', '-b', '-g'], legendsequence=['vent', 'shock', 'max r', 'BS shock'], title=conf)
         
-        plots.someplots(tar*tscale, [numentryar], name=os.path.join(figuredir, 'entries'+tag), xtitle=r'$t$, s', ytitle=r'Entry No', xlog=False, title=conf)
+        plots.someplots(tar*tscale_s, [numentryar], name=os.path.join(figuredir, 'entries'+tag), xtitle=r'$t$, s', ytitle=r'Entry No', xlog=False, title=conf)
 
     # internal energy
     #    print(umag)
@@ -2366,16 +2369,16 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         
         
         
-        plots.somemap(rnew, tar*tscale, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1., par/umagtarnew/0.9, par/umagtarnew/0.8], transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, lurel, name=os.path.join(figuredir, 'q2d_p'+tag), levels=lulev, inchsize=[4, 12], cbtitle=r'$\log_{10}P/P_{\rm mag}$', addcontour=[par/umagtarnew/1., par/umagtarnew/0.9, par/umagtarnew/0.8], transpose=True, xrange=trange, xi_range=xi_range, title=conf)
             
         #in plot_bunch:
         
         # eliminate impact of zero beta:
         betar=betar+1e-12
-        plots.somemap(rnew, tar*tscale, log10(betar), name=os.path.join(figuredir, 'q2d_b'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}\beta$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, log10(betar), name=os.path.join(figuredir, 'q2d_b'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}\beta$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
 
         # Q-: in plot_bunch:
-        plots.somemap(rnew, tar*tscale, log10(qar), name=os.path.join(figuredir, 'flux'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}Q$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, log10(qar), name=os.path.join(figuredir, 'flux'+tag), inchsize=[4, 12], cbtitle=r'$\log_{10}Q$', transpose=True, xrange=trange, xi_range=xi_range, title=conf)
         
         ## temperature equivalent to  radiative flux along the tube
         #Teff_diff =   4.74501 * m1**(-0.25) * (abs(ear))**0.25 # keV    
@@ -2386,19 +2389,19 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
         temperature_max = builtins.max(float(Teff_diff.max()), float(Teff.max()))
         templev = temperature_max * arange(nv) / float(nv - 2)
         
-        plots.somemap(rnew, tar*tscale, Teff, name=os.path.join(figuredir, 'q2d_Teff_surf'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,surf} ({\rm keV}) $', transpose=True, xrange=trange, xi_range=xi_range, levels=templev, title=conf)
+        plots.somemap(rnew, tar*tscale_s, Teff, name=os.path.join(figuredir, 'q2d_Teff_surf'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,surf} ({\rm keV}) $', transpose=True, xrange=trange, xi_range=xi_range, levels=templev, title=conf)
 
         # not in plot_bunch:
         ear=ear+1e-12 # eliminate impact of zero ear
         
-        plots.somemap(rnew, tar*tscale, Teff, name=os.path.join(figuredir, 'q2d_Teff_surf'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,surf} ({\rm keV}) $', transpose=True, xrange=trange, xi_range=xi_range, levels=templev, title=conf)
+        plots.somemap(rnew, tar*tscale_s, Teff, name=os.path.join(figuredir, 'q2d_Teff_surf'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,surf} ({\rm keV}) $', transpose=True, xrange=trange, xi_range=xi_range, levels=templev, title=conf)
         
         
-        plots.somemap(rnew, tar*tscale, Teff_diff, name=os.path.join(figuredir, 'q2d_Teff_along'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,along} ({\rm keV}) $', transpose=True, xrange=trange, ylog=False, xi_range=xi_range, levels=templev, title=conf)
+        plots.somemap(rnew, tar*tscale_s, Teff_diff, name=os.path.join(figuredir, 'q2d_Teff_along'+tag), inchsize=[4, 12], cbtitle=r'$T_{\rm eff,along} ({\rm keV}) $', transpose=True, xrange=trange, ylog=False, xi_range=xi_range, levels=templev, title=conf)
 
         # mdot:not in plot_bunch: there,  alternative relative value is plotted
         mdlev = 3.*arange(nv)/double(nv-2)-1.
-        plots.somemap(rnew, tar*tscale, mdar/mdot, name=os.path.join(figuredir, 'q2d_m'+tag), inchsize=[4, 12], cbtitle=r'$s / \dot{M}$', levels=mdlev, transpose=True, xrange=trange, xi_range=xi_range, title=conf)
+        plots.somemap(rnew, tar*tscale_s, mdar/mdot, name=os.path.join(figuredir, 'q2d_m'+tag), inchsize=[4, 12], cbtitle=r'$s / \dot{M}$', levels=mdlev, transpose=True, xrange=trange, xi_range=xi_range, title=conf)
 
         # mean mdar over time
         mdmean = mdar.mean(axis=0)  
@@ -2417,7 +2420,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
      #accretion rate at the outer boundary rises with time?????
 
         ##??? accretion rate at the outer boundary
-        plots.someplots(tar*tscale, [mdot_out, mdot_out*0+mdot], formatsequence=['-k', '--k'], xlog=False, ylog=False, xtitle=r'$t$', ytitle=r'$\dot{m} (R_{\rm out})$', inchsize=[3.35, 2.], name=os.path.join(figuredir, 'mdot_req'+tag), xi_range=xi_range, title=conf)
+        plots.someplots(tar*tscale_s, [mdot_out, mdot_out*0+mdot], formatsequence=['-k', '--k'], xlog=False, ylog=False, xtitle=r'$t$', ytitle=r'$\dot{m} (R_{\rm out})$', inchsize=[3.35, 2.], name=os.path.join(figuredir, 'mdot_req'+tag), xi_range=xi_range, title=conf)
         
         # derivative_m = mdar[:, 1:] - mdar[:, :-1]
 
@@ -2451,7 +2454,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
     # plots.someplots(rnew, [rnew*0.+1., rnew*0., mdmean/mdot, (mdmean+mdstd)/mdot, (mdmean-mdstd)/mdot], formatsequence = [':k', '--k', '-k', '-g', '-g'], xlog = True, ylog = True, xtitle = r'$R/R_{\rm *}$', ytitle = r'$\langle s\rangle /\dot{M}$', inchsize = [3.35, 2.], name=outdir+'/q2d_mdmean'+tag, xi_range = xi_range, title=conf,charsize=9)
  
         
-        plots.someplots(tar*tscale, [betaeff, betaeff_m, betavent], xtitle=r'$t$, s', ytitle=r'$\beta_{\rm eff} = \frac{u+P}{\rho}\frac{R_*}{GM_*}$', formatsequence=['k.', 'r-', 'b:'], ylog=False, xlog=False, legendsequence=[r'$\beta_{\rm eff} (R_\star)$', r'?$u_{\rm mag}/u_{\rm grav}$', r'$\beta(vent)$'], name=os.path.join(figuredir, 'betaeff'+tag), yrange=[0., betaeff.max()*1.1], xi_range=xi_range, title=conf)
+        plots.someplots(tar*tscale_s, [betaeff, betaeff_m, betavent], xtitle=r'$t$, s', ytitle=r'$\beta_{\rm eff} = \frac{u+P}{\rho}\frac{R_*}{GM_*}$', formatsequence=['k.', 'r-', 'b:'], ylog=False, xlog=False, legendsequence=[r'$\beta_{\rm eff} (R_\star)$', r'?$u_{\rm mag}/u_{\rm grav}$', r'$\beta(vent)$'], name=os.path.join(figuredir, 'betaeff'+tag), yrange=[0., betaeff.max()*1.1], xi_range=xi_range, title=conf)
         
         original_stdout = sys.stdout
         save_summary = open(outdir+'/summary.txt', 'a') 
@@ -2476,7 +2479,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
     # process kt
     #for kt in arange(0,time_ar_size,max(1,round(time_ar_size/nmax))):  #galja, was "for kt in arange(nt):"
         for kr in arange(nrnew):
-            ftable.write(str(tar[kt]*tscale)+' '+str(rnew[kr])+' '+str(var[kt, kr])+' '+str(lurel[kt, kr])+' '+str(mdar[kt, kr]/mdot)+' '+str(qar[kt,kr])+' '+str(ear[kt,kr])+' '+str(par[kt, kr]/mdot)+' '+str(rhoar[kt, kr]/mdot)+' '+str(betar[kt, kr]/mdot)+'\n')
+            ftable.write(str(tar[kt]*tscale_s)+' '+str(rnew[kr])+' '+str(var[kt, kr])+' '+str(lurel[kt, kr])+' '+str(mdar[kt, kr]/mdot)+' '+str(qar[kt,kr])+' '+str(ear[kt,kr])+' '+str(par[kt, kr]/mdot)+' '+str(rhoar[kt, kr]/mdot)+' '+str(betar[kt, kr]/mdot)+'\n')
     ftable.flush()
     ftable.close()
 
@@ -2489,7 +2492,7 @@ def quasi2d(hname, n1, n2, conf = 'DEFAULT', step = 1, kleap = 5, trange = None,
 
     for kt in range(0, ntime, step):
         if rvent[kt] > 1.0:
-            frvent.write(f'{tar[kt] * tscale} {rvent[kt]}\n')
+            frvent.write(f'{tar[kt] * tscale_s} {rvent[kt]}\n')
 
     frvent.close()    
 

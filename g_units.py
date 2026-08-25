@@ -2,6 +2,8 @@ import geometry as geo
 
 from g_consts import Consts
 
+import numpy as np
+
 def model_m1(config, conf='DEFAULT'):
     return config[conf].getfloat('m1')
 
@@ -45,7 +47,7 @@ def umag_calc_polar (b12, m1) :
 
 def umag_calc_local (b12, m1, th0) :
     # magnetic pressure B2/8/pi at the NS surface at specific magnetic latitude
-    return umag_calc_polar (b12, m1) * (1.+3.*(cos(th0))**2)/4.
+    return umag_calc_polar (b12, m1) * (1.+3.*(np.cos(th0))**2)/4.
 
 def umag_calc_polar_phys (b12) :
     # polar magnetic pressure B2/8/pi at the NS surface is SGC units, b12 = B(Gauss)/1e12

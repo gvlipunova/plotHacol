@@ -28,3 +28,4 @@ shocktestm.*
 begin.tex
 end.tex
 globals.conf
+*.txt
